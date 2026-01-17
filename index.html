@@ -19,6 +19,7 @@
 
     <!-- My Style -->
     <link rel="stylesheet" href="CSS/style.css" />
+
     <!-- AlphineJs -->
     <script
       defer
@@ -31,8 +32,8 @@
 
   <body>
     <!-- Navbar start -->
-    <nav class="navbar">
-      <a href="#" class="navbar-logo">kopi<span>ngalam</span>.</a>
+    <nav class="navbar" x-data>
+      <a href="#" class="navbar-logo">kopi<span>ngalam</span></a>
 
       <div class="navbar-nav">
         <a href="#home">Home</a>
@@ -45,7 +46,12 @@
       <div class="navbar-extra">
         <a href="#" id="search-button"><i data-feather="search"></i></a>
         <a href="#" id="shopping-cart-button"
-          ><i data-feather="shopping-cart"></i
+          ><i data-feather="shopping-cart"></i>
+          <span
+            class="quantity-badge"
+            x-show="$store.cart.quantity"
+            x-text="$store.cart.quantity"
+          ></span
         ></a>
         <a href="#" id="hamburger-menu"><i data-feather="menu"></i></a>
       </div>
@@ -59,29 +65,41 @@
 
       <!-- Shopping Cart start -->
       <div class="shopping-cart">
+        <template x-for="(item, index) in $store.cart.items" x-key="index">
         <div class="cart-item">
-          <img src="img/products/1.jpg" alt="Product 1" />
+          <img :src="`img/products/${item.img}`" :alt="item.name" />
           <div class="item-detail">
-            <h3>Product 1</h3>
-            <div class="item-price">IDR 30K</div>
+            <h3 x-text="item.name"></h3>
+            <div class="item-price">
+            <span x-text="rupiah(item.price)"></span> &times;
+            <button id="remove" @click="$store.cart.remove(item.id)">&minus;</button>
+            <span x-text="item.quantity"></span>
+            <button id="add" @click="$store.cart.add(item)">&plus;</button> &equals;
+            <span x-text="rupiah(item.total)"></span>
           </div>
-          <i data-feather="trash-2" class="remove-item"></i>
         </div>
-        <div class="cart-item">
-          <img src="img/products/1.jpg" alt="Product 1" />
-          <div class="item-detail">
-            <h3>Product 1</h3>
-            <div class="item-price">IDR 30K</div>
-          </div>
-          <i data-feather="trash-2" class="remove-item"></i>
-        </div>
-        <div class="cart-item">
-          <img src="img/products/1.jpg" alt="Product 1" />
-          <div class="item-detail">
-            <h3>Product 1</h3>
-            <div class="item-price">IDR 30K</div>
-          </div>
-          <i data-feather="trash-2" class="remove-item"></i>
+        </template>
+        <h4 x-show="!$store.cart.items.length">Card Is Empty</h4>
+        <h4 x-show="$store.cart.items.length">Total : <span x-text="rupiah($store.cart.total)"></span></h4>
+
+        <div class="form-container" x-show="$store.cart.items.length">
+          <form action="" id="checkoutForm">
+            <h5>Customer Information</h5>
+
+            <label for="name">
+              <span>Nama</span>
+              <input type="text" name="name" id="name">
+            </label>
+            <label for="email">
+              <span>Email</span>
+              <input type="email" name="email" id="email">
+            </label>
+            <label for="phone">
+              <span>Phone</span>
+              <input type="number" name="phone" id="phone" autocomplete="off">
+            </label>
+            <button class="checkout-button" type="submit" id="checkout">Checkout</button>
+          </form>
         </div>
       </div>
       <!-- Shopping Cart end -->
@@ -92,10 +110,10 @@
     <section class="hero" id="home">
       <div class="mask-container">
         <main class="content">
-          <h1>Mari Nikmati Secangkir <span>Kopi</span></h1>
+          <h1>Nikmati Secangkir <span>Kopi</span></h1>
           <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
-            Accusantium, enim.
+            Dengan cita rasa terbaik dari pegunungan Malang, kami menyajikan
+            kopi berkualitas tinggi untuk Anda nikmati setiap hari.
           </p>
         </main>
       </div>
@@ -113,12 +131,12 @@
         <div class="content">
           <h3>Kenapa memilih kopi kami?</h3>
           <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur
-            ducimus voluptatum dolor. Et, voluptatum accusantium!
+            dengan pengalaman bertahun-tahun dalam menyajikan kopi terbaik, kami
+            berkomitmen untuk memberikan kualitas dan rasa yang tak terlupakan.
           </p>
           <p>
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Hic
-            deserunt iure amet facilis eos a quo cum voluptates molestias nihil.
+            Kami hanya menggunakan biji kopi pilihan yang diproses dengan cermat
+            untuk memastikan setiap tegukan memberikan kenikmatan maksimal.
           </p>
         </div>
       </div>
@@ -129,39 +147,34 @@
     <section id="menu" class="menu">
       <h2><span>Menu</span> Kami</h2>
       <p>
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Expedita,
-        repellendus numquam quam tempora voluptatum.
+        Menu kopi spesial yang kami tawarkan kepada Anda, nikmati cita rasa
+        terbaik dari setiap cangkir kopi.
       </p>
 
       <div class="row">
         <div class="menu-card">
           <img src="img/menu/1.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Espresso -</h3>
-          <p class="menu-card-price">IDR 15K</p>
+          <h3 class="menu-card-title">- Brazil -</h3>
+          <p class="menu-card-price">IDR 35K</p>
         </div>
         <div class="menu-card">
-          <img src="img/menu/1.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Capuccino -</h3>
+          <img src="img/menu/2.jpg" alt="Espresso" class="menu-card-img" />
+          <h3 class="menu-card-title">- Robusta -</h3>
+          <p class="menu-card-price">IDR 30K</p>
+        </div>
+        <div class="menu-card">
+          <img src="img/menu/3.jpg" alt="Espresso" class="menu-card-img" />
+          <h3 class="menu-card-title">- Arabica -</h3>
+          <p class="menu-card-price">IDR 35K</p>
+        </div>
+        <div class="menu-card">
+          <img src="img/menu/4.jpg" alt="Espresso" class="menu-card-img" />
+          <h3 class="menu-card-title">- Latte -</h3>
           <p class="menu-card-price">IDR 25K</p>
         </div>
         <div class="menu-card">
-          <img src="img/menu/1.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Latte -</h3>
-          <p class="menu-card-price">IDR 20K</p>
-        </div>
-        <div class="menu-card">
-          <img src="img/menu/1.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Espresso -</h3>
-          <p class="menu-card-price">IDR 15K</p>
-        </div>
-        <div class="menu-card">
-          <img src="img/menu/1.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Espresso -</h3>
-          <p class="menu-card-price">IDR 15K</p>
-        </div>
-        <div class="menu-card">
-          <img src="img/menu/1.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Espresso -</h3>
+          <img src="img/menu/5.jpg" alt="Espresso" class="menu-card-img" />
+          <h3 class="menu-card-title">- Mocha Latte -</h3>
           <p class="menu-card-price">IDR 15K</p>
         </div>
       </div>
@@ -169,80 +182,37 @@
     <!-- Menu Section end -->
 
     <!-- Products Section start -->
-    <section class="products" id="products">
+    <section class="products" id="products" x-data="products">
       <h2><span>Produk Unggulan</span> Kami</h2>
       <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Illo unde eum,
-        ab fuga possimus iste.
+        Berikut adalah beberapa produk kopi unggulan yang kami tawarkan kepada
+        Anda.
       </p>
 
       <div class="row">
-        <div class="product-card">
-          <div class="product-icons">
-            <a href="#"><i data-feather="shopping-cart"></i></a>
-            <a href="#" class="item-detail-button"
-              ><i data-feather="eye"></i
-            ></a>
-          </div>
-          <div class="product-image">
-            <img src="img/products/1.jpg" alt="Product 1" />
-          </div>
-          <div class="product-content">
-            <h3>Brazil</h3>
-            <div class="product-stars">
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star"></i>
+        <template x-for="(item, index) in items" x-key="index">
+          <div class="product-card">
+            <div class="product-icons">
+              <a href="#" @click.prevent="$store.cart.add(item)">
+                <span style="font-size: 3rem">+</span>
+              </a>
             </div>
-            <div class="product-price">IDR 35K <span>IDR 55K</span></div>
-          </div>
-        </div>
-        <div class="product-card">
-          <div class="product-icons">
-            <a href="#"><i data-feather="shopping-cart"></i></a>
-            <a href="#" class="item-detail-button"
-              ><i data-feather="eye"></i
-            ></a>
-          </div>
-          <div class="product-image">
-            <img src="img/products/2.jpg" alt="Product 1" />
-          </div>
-          <div class="product-content">
-            <h3>Robusta</h3>
-            <div class="product-stars">
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
+            <div class="product-image">
+              <img :src="`img/products/${item.img}`" alt="item.name" />
             </div>
-            <div class="product-price">IDR 30K <span>IDR 55K</span></div>
-          </div>
-        </div>
-        <div class="product-card">
-          <div class="product-icons">
-            <a href="#"><i data-feather="shopping-cart"></i></a>
-            <a href="#" class="item-detail-button"
-              ><i data-feather="eye"></i
-            ></a>
-          </div>
-          <div class="product-image">
-            <img src="img/products/4.jpg" alt="Product 1" />
-          </div>
-          <div class="product-content">
-            <h3>Latte</h3>
-            <div class="product-stars">
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
-              <i data-feather="star"></i>
+            <div class="product-content">
+              <h3 x-text="item.name"></h3>
+              <div class="product-stars">
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star"></i>
+              </div>
+              <div class="product-price"><span x-text="item.price"></span></div>
             </div>
-            <div class="product-price">IDR 25K <span>IDR 55K</span></div>
           </div>
-        </div>
+        </template>
       </div>
     </section>
     <!-- Products Section end -->
@@ -294,9 +264,11 @@
     <!-- Footer start -->
     <footer>
       <div class="socials">
-        <a href="#"><i data-feather="instagram"></i></a>
-        <a href="#"><i data-feather="twitter"></i></a>
-        <a href="#"><i data-feather="facebook"></i></a>
+        <a
+          href="https://www.instagram.com/iqbal77321?igsh=bXJ1OXQ4MHdibW50"
+          target="_blank"
+          ><i data-feather="instagram"></i
+        ></a>
       </div>
 
       <div class="links">

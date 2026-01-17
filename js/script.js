@@ -10,8 +10,8 @@ function kirimKeWa() {
     alert("Please fill in your name and WA number.");
     return;
   }
-  const pesan = `Halo KopiNgalam, saya *${nama}* (%0AEmail:${email}%0A). nomer WA saya {$wa_user}. Saya ingin memesan`;
-  const url = `https://wa.me/${nomorTujuan}?text=${pesan}`;
+  const pesan = `Halo KopiNgalam, saya *${nama}* (%0AEmail:${email}%0A). nomer WA saya ${wa_user}.`;
+  const url = `https://wa.me/${6285961438827}?text=${pesan}`;
 
   window.open(url, "_blank");
 }
