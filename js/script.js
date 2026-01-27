@@ -1,17 +1,20 @@
-// Kirim pesan ke WhatsApp
+// Kirim pesan ke WhatsApp (Bagian Kontak Kami)
 function kirimKeWa() {
   const nama = document.getElementById("nama").value;
   const email = document.getElementById("email").value;
   const wa_user = document.getElementById("wa").value;
   const nomorTujuan = "6285961438827";
 
-  //   validasi agar pesan tidak boleh kosong
+  // Validasi agar nama dan nomor tidak kosong
   if (nama === "" || wa_user === "") {
     alert("Please fill in your name and WA number.");
     return;
   }
-  const pesan = `Halo KopiNgalam, saya *${nama}* (%0AEmail:${email}%0A). nomer WA saya ${wa_user}.`;
-  const url = `https://wa.me/${6285961438827}?text=${pesan}`;
+
+  // Menyusun pesan dengan tambahan kalimat tetap
+  const pesan = `Halo KopiNgalam, saya *${nama}*.%0AEmail: ${email}%0ANomor WA: ${wa_user}.%0A%0Asaya ingin bertanya tentang produk anda.`;
+
+  const url = `https://wa.me/${nomorTujuan}?text=${pesan}`;
 
   window.open(url, "_blank");
 }
