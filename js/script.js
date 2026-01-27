@@ -82,3 +82,34 @@ window.onclick = (e) => {
     itemDetailModal.style.display = "none";
   }
 };
+
+const checkoutButton = document.querySelector("#checkout");
+
+checkoutButton.addEventListener("click", function (e) {
+  e.preventDefault();
+
+  // Ambil data form
+  const nama = document.querySelector("#name").value;
+  const email = document.querySelector("#email").value;
+  const phone = document.querySelector("#phone").value;
+
+  // Ambil data dari Alpine Store (keranjang)
+  const cartItems = Alpine.store("cart").items;
+  const total = Alpine.store("cart").total;
+
+  if (!nama || !phone) {
+    alert("Mohon isi nama dan nomor telepon!");
+    return;
+  }
+
+  // Susun format pesan WhatsApp
+  let pesan = `Halo Admin Kopi Ngalam!%0A%0ASaya ingin memesan:%0A`;
+  cartItems.forEach((item) => {
+    pesan += `- ${item.name} (${item.quantity} x ${item.price})%0A`;
+  });
+  pesan += `%0A*Total: Rp ${total}*%0A%0A---%0A*Data Pelanggan*%0ANama: ${nama}%0ANo HP: ${phone}`;
+
+  // Buka WhatsApp (Ganti nomor di bawah dengan nomor kamu)
+  const whatsappUrl = `https://wa.me/6285961438827/?text=${pesan}`;
+  window.open(whatsappUrl, "_blank");
+});
