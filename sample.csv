@@ -1,0 +1,5 @@
+payment_link_type,gross_amount,first_name,last_name,phone,email,item_details_id,item_details_name,item_details_price,item_details_quantity,custom_field1,title,dynamic_amount_preset_amount,dynamic_amount_min_amount,dynamic_amount_max_amount,custom_bni_va_number,custom_bca_va_number,custom_bri_va_number,custom_permata_va_number,custom_cimb_va_number
+FIXED_AMOUNT,1000,John,Doe,857212121,example@midtrans.com,id,name,1000,1,custom_field1,testTitle,,,,,,,,
+FIXED_AMOUNT,1000,John,Doe,857212121,example@midtrans.com,id,name,1000,1,custom_field1,testTitle,,,,,,,,
+DYNAMIC_AMOUNT,,John,Doe,857212121,example@midtrans.com,,,,,custom_field1,testTitle,1000,500,2000,,,,,
+DYNAMIC_AMOUNT,,John,Doe,857212121,example@midtrans.com,,,,,custom_field1,testTitle,1000,500,2000,,,,,
