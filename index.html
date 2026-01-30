@@ -17,6 +17,9 @@
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
 
+    <!-- Pembayaran -->
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- My Style -->
     <link rel="stylesheet" href="CSS/style.css" />
 
@@ -30,9 +33,9 @@
     <script src="src/app.js"></script>
   </head>
 
-  <body>
+  <body x-data="products">
     <!-- Navbar start -->
-    <nav class="navbar" x-data>
+    <nav class="navbar">
       <a href="#" class="navbar-logo">kopi<span>ngalam</span></a>
 
       <div class="navbar-nav">
@@ -144,45 +147,24 @@
     <!-- About Section end -->
 
     <!-- Menu Section start -->
-    <section id="menu" class="menu">
-      <h2><span>Menu</span> Kami</h2>
-      <p>
-        Menu kopi spesial yang kami tawarkan kepada Anda, nikmati cita rasa
-        terbaik dari setiap cangkir kopi.
-      </p>
+    <section id="menu" class="menu" x-data="products">
+  <h2><span>Menu</span> Kami</h2>
+  <p>Menu kopi spesial yang kami tawarkan kepada Anda.</p>
 
-      <div class="row">
-        <div class="menu-card">
-          <img src="img/menu/1.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Americano -</h3>
-          <p class="menu-card-price">IDR 35K</p>
-        </div>
-        <div class="menu-card">
-          <img src="img/menu/2.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Robusta -</h3>
-          <p class="menu-card-price">IDR 30K</p>
-        </div>
-        <div class="menu-card">
-          <img src="img/menu/3.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Arabica -</h3>
-          <p class="menu-card-price">IDR 35K</p>
-        </div>
-        <div class="menu-card">
-          <img src="img/menu/4.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Latte -</h3>
-          <p class="menu-card-price">IDR 25K</p>
-        </div>
-        <div class="menu-card">
-          <img src="img/menu/5.jpg" alt="Espresso" class="menu-card-img" />
-          <h3 class="menu-card-title">- Mocha Latte -</h3>
-          <p class="menu-card-price">IDR 15K</p>
-        </div>
+  <div class="row">
+    <template x-for="(item, index) in items" :key="index">
+      <div class="menu-card">
+        <img :src="`img/menu/${item.img}`" :alt="item.name" class="menu-card-img" />
+        <h3 class="menu-card-title" x-text="`- ${item.name} -` "></h3>
+        <p class="menu-card-price" x-text="rupiah(item.price)"></p>
       </div>
-    </section>
+    </template>
+  </div>
+</section>
     <!-- Menu Section end -->
 
     <!-- Products Section start -->
-    <section class="products" id="products" x-data="products">
+    <section class="products" id="products">
       <h2><span>Produk Unggulan</span> Kami</h2>
       <p>
         Berikut adalah beberapa produk kopi unggulan yang kami tawarkan kepada
@@ -193,10 +175,13 @@
         <template x-for="(item, index) in items" x-key="index">
           <div class="product-card">
             <div class="product-icons">
-              <a href="#" @click.prevent="$store.cart.add(item)">
-                <span style="font-size: 3rem">+</span>
-              </a>
-            </div>
+  <a href="#" @click.prevent="$store.cart.add(item)">
+    <i data-feather="shopping-cart"></i>
+  </a>
+  <a href="#" class="item-detail-button" @click.prevent="changeItem(item)">
+                <i data-feather="eye"></i>
+</a>
+</div>
             <div class="product-image">
               <img :src="`img/products/${item.img}`" alt="item.name" />
             </div>
@@ -209,7 +194,7 @@
                 <i data-feather="star" class="star-full"></i>
                 <i data-feather="star"></i>
               </div>
-              <div class="product-price"><span x-text="item.price"></span></div>
+              <div class="product-price" x-text="rupiah(item.price)"></div>
             </div>
           </div>
         </template>
@@ -286,33 +271,37 @@
 
     <!-- Modal Box Item Detail start -->
     <div class="modal" id="item-detail-modal">
-      <div class="modal-container">
-        <a href="#" class="close-icon"><i data-feather="x"></i></a>
-        <div class="modal-content">
-          <img src="img/products/1.jpg" alt="Product 1" />
-          <div class="product-content">
-            <h3>Product 1</h3>
-            <p>
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-              Provident, tenetur cupiditate facilis obcaecati ullam maiores
-              minima quos perspiciatis similique itaque, esse rerum eius
-              repellendus voluptatibus!
-            </p>
-            <div class="product-stars">
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star" class="star-full"></i>
-              <i data-feather="star"></i>
-            </div>
-            <div class="product-price">IDR 30K <span>IDR 55K</span></div>
-            <a href="#"
-              ><i data-feather="shopping-cart"></i> <span>add to cart</span></a
-            >
-          </div>
+  <div class="modal-container">
+    <a href="#" class="close-icon" @click.prevent="document.querySelector('#item-detail-modal').style.display='none'">
+      <i data-feather="x"></i>
+    </a>
+    
+    <div class="modal-content">
+      <img :src="`img/products/${currentItem.img}`" :alt="currentItem.name" />
+      
+      <div class="product-content">
+        <h3 x-text="currentItem.name"></h3>
+        <p x-text="currentItem.desc"></p>
+        
+        <div class="product-stars">
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star"></i>
         </div>
+        
+        <div class="product-price">
+          <span x-text="rupiah(currentItem.price)"></span>
+        </div>
+        
+        <a href="#" @click.prevent="$store.cart.add(currentItem)">
+          <i data-feather="shopping-cart"></i> <span>add to cart</span>
+        </a>
       </div>
     </div>
+  </div>
+</div>
     <!-- Modal Box Item Detail end -->
 
     <!-- Feather Icons -->

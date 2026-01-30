@@ -91,28 +91,53 @@ const checkoutButton = document.querySelector("#checkout");
 checkoutButton.addEventListener("click", function (e) {
   e.preventDefault();
 
-  // Ambil data form
+  // 1. Ambil data form
   const nama = document.querySelector("#name").value;
   const email = document.querySelector("#email").value;
   const phone = document.querySelector("#phone").value;
 
-  // Ambil data dari Alpine Store (keranjang)
+  // 2. Ambil data keranjang
   const cartItems = Alpine.store("cart").items;
   const total = Alpine.store("cart").total;
 
+  // 3. Validasi Form
   if (!nama || !phone) {
-    alert("Mohon isi nama dan nomor telepon!");
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Mohon isi nama dan nomor telepon!",
+    });
     return;
   }
 
-  // Susun format pesan WhatsApp
-  let pesan = `Halo Admin Kopi Ngalam!%0A%0ASaya ingin memesan:%0A`;
-  cartItems.forEach((item) => {
-    pesan += `- ${item.name} (${item.quantity} x ${item.price})%0A`;
-  });
-  pesan += `%0A*Total: Rp ${total}*%0A%0A---%0A*Data Pelanggan*%0ANama: ${nama}%0ANo HP: ${phone}`;
+  // 4. Munculkan Pop-up QR Code
+  Swal.fire({
+    title: "Selesaikan Pembayaran",
+    text: `Total yang harus dibayar: ${rupiah(total)}`,
+    imageUrl: "img/qr/qr-code.png", // <--- Pastikan file gambar QR Anda ada di sini
+    imageWidth: 300,
+    imageHeight: 300,
+    imageAlt: "QR Code Pembayaran",
+    showCancelButton: true,
+    confirmButtonText: "Saya Sudah Bayar",
+    cancelButtonText: "Batal",
+    confirmButtonColor: "#b6895b", // Warna tema kopi
+  }).then((result) => {
+    // 5. Jika user klik "Sudah Bayar", arahkan ke WhatsApp
+    if (result.isConfirmed) {
+      let pesan = `Halo Admin Kopi Ngalam!%0A%0ASaya *Sudah Membayar* pesanan berikut:%0A`;
+      cartItems.forEach((item) => {
+        pesan += `- ${item.name} (${item.quantity} x ${rupiah(item.price)})%0A`;
+      });
+      pesan += `%0A*Total: ${rupiah(total)}*%0A%0A---%0A*Data Pelanggan*%0ANama: ${nama}%0ANo HP: ${phone}`;
 
-  // Buka WhatsApp (Ganti nomor di bawah dengan nomor kamu)
-  const whatsappUrl = `https://wa.me/6285961438827/?text=${pesan}`;
-  window.open(whatsappUrl, "_blank");
+      const whatsappUrl = `https://wa.me/6285961438827?text=${pesan}`;
+      window.open(whatsappUrl, "_blank");
+
+      // Kosongkan keranjang setelah checkout (Opsional)
+      // Alpine.store('cart').items = [];
+      // Alpine.store('cart').quantity = 0;
+      // Alpine.store('cart').total = 0;
+    }
+  });
 });
