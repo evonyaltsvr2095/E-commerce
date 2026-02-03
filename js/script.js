@@ -114,9 +114,9 @@ checkoutButton.addEventListener("click", function (e) {
   Swal.fire({
     title: "Selesaikan Pembayaran",
     text: `Total yang harus dibayar: ${rupiah(total)}`,
-    imageUrl: "img/qr/qr-code.png", // <--- Pastikan file gambar QR Anda ada di sini
+    imageUrl: "img/qr/qr-code.jpeg", // <--- Pastikan file gambar QR Anda ada di sini
     imageWidth: 300,
-    imageHeight: 300,
+    imageHeight: 370,
     imageAlt: "QR Code Pembayaran",
     showCancelButton: true,
     confirmButtonText: "Saya Sudah Bayar",
@@ -125,6 +125,28 @@ checkoutButton.addEventListener("click", function (e) {
   }).then((result) => {
     // 5. Jika user klik "Sudah Bayar", arahkan ke WhatsApp
     if (result.isConfirmed) {
+      const daftarPesanan = cartItems
+        .map((item) => `${item.name} (${item.quantity}x)`)
+        .join(", ");
+
+      const dataKeSpreadsheet = {
+        nama: nama,
+        email: email,
+        phone: phone,
+        pesanan: daftarPesanan,
+        total: total,
+      };
+
+      const scriptURL =
+        "https://script.google.com/macros/s/AKfycbwShqYDm_lmilYXIEpHy04nBvywpzrXWPc1SlruF6AsOvNHqyt1VoVOMxVtbFRDsaCU/exec";
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(dataKeSpreadsheet),
+      })
+        .then((response) => console.log("Berhasil rekam ke Sheets!"))
+        .catch((error) => console.error("Gagal rekam:", error));
+
       let pesan = `Halo Admin Kopi Ngalam!%0A%0ASaya *Sudah Membayar* pesanan berikut:%0A`;
       cartItems.forEach((item) => {
         pesan += `- ${item.name} (${item.quantity} x ${rupiah(item.price)})%0A`;
@@ -134,10 +156,13 @@ checkoutButton.addEventListener("click", function (e) {
       const whatsappUrl = `https://wa.me/6285961438827?text=${pesan}`;
       window.open(whatsappUrl, "_blank");
 
-      // Kosongkan keranjang setelah checkout (Opsional)
-      // Alpine.store('cart').items = [];
-      // Alpine.store('cart').quantity = 0;
-      // Alpine.store('cart').total = 0;
+      // Aktifkan ini agar keranjang kosong otomatis setelah checkout
+      Alpine.store("cart").items = [];
+      Alpine.store("cart").quantity = 0;
+      Alpine.store("cart").total = 0;
+
+      // Menutup shopping cart agar tidak menghalangi layar
+      document.querySelector(".shopping-cart").classList.remove("active");
     }
   });
 });
