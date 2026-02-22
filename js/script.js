@@ -91,6 +91,8 @@ const checkoutButton = document.querySelector("#checkout");
 checkoutButton.addEventListener("click", function (e) {
   e.preventDefault();
 
+  document.querySelector(".shopping-cart").classList.remove("active");
+
   // 1. Ambil data form
   const nama = document.querySelector("#name").value;
   const email = document.querySelector("#email").value;
