@@ -304,6 +304,31 @@
 </div>
     <!-- Modal Box Item Detail end -->
 
+        <!-- Histori Start -->
+    <div class="modal" id="history-modal" x-data="historyData">
+  <div class="modal-container">
+    <a href="#" class="close-icon" @click.prevent="document.querySelector('#history-modal').style.display='none'">
+      <i data-feather="x"></i>
+    </a>
+    <div class="modal-content" style="display: block; width: 100%;">
+      <h2 style="margin-bottom: 1rem;">Riwayat Pesanan Anda</h2>
+      <div style="max-height: 300px; overflow-y: auto;">
+        <template x-for="(h, index) in historyItems" :key="index">
+          <div style="border-bottom: 1px solid #ccc; padding: 10px 0;">
+            <p><strong x-text="h.date"></strong></p>
+            <p x-text="h.items"></p>
+            <p>Total: <span x-text="rupiah(h.total)"></span></p>
+          </div>
+        </template>
+        <template x-if="historyItems.length === 0">
+          <p>Belum ada riwayat pesanan.</p>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
+    <!-- Histori End -->
+
     <!-- Feather Icons -->
     <script>
       feather.replace();
