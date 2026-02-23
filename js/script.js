@@ -62,6 +62,27 @@ document.addEventListener("click", function (e) {
   }
 });
 
+// Toggle Modal History
+const historyModal = document.querySelector('#history-modal');
+document.querySelector('#history-button').onclick = (e) => {
+  historyModal.style.display = 'flex';
+  e.preventDefault();
+};
+
+// Update pada bagian Checkout (didalam event listener checkoutButton)
+// Tambahkan kode ini tepat sebelum window.open(whatsappUrl, "_blank"):
+
+const newHistoryEntry = {
+  date: new Date().toLocaleString('id-ID'),
+  items: cartItems.map(item => `${item.name} (${item.quantity}x)`).join(", "),
+  total: total
+};
+
+// Ambil history lama, tambahkan yang baru, lalu simpan kembali
+const currentHistory = JSON.parse(localStorage.getItem("kopi-history")) || [];
+currentHistory.unshift(newHistoryEntry); // Tambah ke urutan paling atas
+localStorage.setItem("kopi-history", JSON.stringify(currentHistory));
+
 // Modal Box
 const itemDetailModal = document.querySelector("#item-detail-modal");
 const itemDetailButtons = document.querySelectorAll(".item-detail-button");
