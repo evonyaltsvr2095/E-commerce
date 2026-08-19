@@ -1,3 +1,18 @@
+// ==========================================
+// 1. TAMBAHKAN FUNGSI RUPIAH DI SINI
+// ==========================================
+const rupiah = (number) => {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(number);
+};
+
+// ==========================================
+// KODE BAWAAN ANDA
+// ==========================================
+
 // Kirim pesan ke WhatsApp (Bagian Kontak Kami)
 function kirimKeWa() {
   const nama = document.getElementById("nama").value;
@@ -5,23 +20,18 @@ function kirimKeWa() {
   const wa_user = document.getElementById("wa").value;
   const nomorTujuan = "6285961438827";
 
-  // Validasi agar nama dan nomor tidak kosong
   if (nama === "" || wa_user === "") {
     alert("Please fill in your name and WA number.");
     return;
   }
 
-  // Menyusun pesan dengan tambahan kalimat tetap
   const pesan = `Halo KopiNgalam, saya *${nama}*.%0AEmail: ${email}%0ANomor WA: ${wa_user}.%0A%0Asaya ingin bertanya tentang produk anda.`;
-
   const url = `https://wa.me/${nomorTujuan}?text=${pesan}`;
-
   window.open(url, "_blank");
 }
 
 // Toggle class active untuk hamburger menu
 const navbarNav = document.querySelector(".navbar-nav");
-// ketika hamburger menu di klik
 document.querySelector("#hamburger-menu").onclick = () => {
   navbarNav.classList.toggle("active");
 };
@@ -29,7 +39,6 @@ document.querySelector("#hamburger-menu").onclick = () => {
 // Toggle class active untuk search form
 const searchForm = document.querySelector(".search-form");
 const searchBox = document.querySelector("#search-box");
-
 document.querySelector("#search-button").onclick = (e) => {
   searchForm.classList.toggle("active");
   searchBox.focus();
@@ -52,11 +61,9 @@ document.addEventListener("click", function (e) {
   if (!hm.contains(e.target) && !navbarNav.contains(e.target)) {
     navbarNav.classList.remove("active");
   }
-
   if (!sb.contains(e.target) && !searchForm.contains(e.target)) {
     searchForm.classList.remove("active");
   }
-
   if (!sc.contains(e.target) && !shoppingCart.contains(e.target)) {
     shoppingCart.classList.remove("active");
   }
@@ -69,21 +76,7 @@ document.querySelector('#history-button').onclick = (e) => {
   e.preventDefault();
 };
 
-// Update pada bagian Checkout (didalam event listener checkoutButton)
-// Tambahkan kode ini tepat sebelum window.open(whatsappUrl, "_blank"):
-
-const newHistoryEntry = {
-  date: new Date().toLocaleString('id-ID'),
-  items: cartItems.map(item => `${item.name} (${item.quantity}x)`).join(", "),
-  total: total
-};
-
-// Ambil history lama, tambahkan yang baru, lalu simpan kembali
-const currentHistory = JSON.parse(localStorage.getItem("kopi-history")) || [];
-currentHistory.unshift(newHistoryEntry); // Tambah ke urutan paling atas
-localStorage.setItem("kopi-history", JSON.stringify(currentHistory));
-
-// Modal Box
+// Modal Box Item Detail
 const itemDetailModal = document.querySelector("#item-detail-modal");
 const itemDetailButtons = document.querySelectorAll(".item-detail-button");
 
@@ -94,98 +87,109 @@ itemDetailButtons.forEach((btn) => {
   };
 });
 
-// klik tombol close modal
 document.querySelector(".modal .close-icon").onclick = (e) => {
   itemDetailModal.style.display = "none";
   e.preventDefault();
 };
 
-// klik di luar modal
 window.onclick = (e) => {
   if (e.target === itemDetailModal) {
     itemDetailModal.style.display = "none";
   }
 };
 
+// ==========================================
+// 2. PERBAIKAN PADA BAGIAN CHECKOUT
+// ==========================================
 const checkoutButton = document.querySelector("#checkout");
 
-checkoutButton.addEventListener("click", function (e) {
-  e.preventDefault();
+// Gunakan if(checkoutButton) agar tidak error jika tombol tidak ada di halaman
+if (checkoutButton) {
+  checkoutButton.addEventListener("click", function (e) {
+    e.preventDefault();
 
-  document.querySelector(".shopping-cart").classList.remove("active");
+    document.querySelector(".shopping-cart").classList.remove("active");
 
-  // 1. Ambil data form
-  const nama = document.querySelector("#name").value;
-  const email = document.querySelector("#email").value;
-  const phone = document.querySelector("#phone").value;
+    const nama = document.querySelector("#name").value;
+    const email = document.querySelector("#email").value;
+    const phone = document.querySelector("#phone").value;
 
-  // 2. Ambil data keranjang
-  const cartItems = Alpine.store("cart").items;
-  const total = Alpine.store("cart").total;
+    const cartItems = Alpine.store("cart").items;
+    const total = Alpine.store("cart").total;
 
-  // 3. Validasi Form
-  if (!nama || !phone) {
-    Swal.fire({
-      icon: "error",
-      title: "Oops...",
-      text: "Mohon isi nama dan nomor telepon!",
-    });
-    return;
-  }
-
-  // 4. Munculkan Pop-up QR Code
-  Swal.fire({
-    title: "Selesaikan Pembayaran",
-    text: `Total yang harus dibayar: ${rupiah(total)}`,
-    imageUrl: "img/qr/qr-code.jpeg", // <--- Pastikan file gambar QR Anda ada di sini
-    imageWidth: 300,
-    imageHeight: 370,
-    imageAlt: "QR Code Pembayaran",
-    showCancelButton: true,
-    confirmButtonText: "Saya Sudah Bayar",
-    cancelButtonText: "Batal",
-    confirmButtonColor: "#b6895b", // Warna tema kopi
-  }).then((result) => {
-    // 5. Jika user klik "Sudah Bayar", arahkan ke WhatsApp
-    if (result.isConfirmed) {
-      const daftarPesanan = cartItems
-        .map((item) => `${item.name} (${item.quantity}x)`)
-        .join(", ");
-
-      const dataKeSpreadsheet = {
-        nama: nama,
-        email: email,
-        phone: phone,
-        pesanan: daftarPesanan,
-        total: total,
-      };
-
-      const scriptURL =
-        "https://script.google.com/macros/s/AKfycbwShqYDm_lmilYXIEpHy04nBvywpzrXWPc1SlruF6AsOvNHqyt1VoVOMxVtbFRDsaCU/exec";
-
-      fetch(scriptURL, {
-        method: "POST",
-        body: JSON.stringify(dataKeSpreadsheet),
-      })
-        .then((response) => console.log("Berhasil rekam ke Sheets!"))
-        .catch((error) => console.error("Gagal rekam:", error));
-
-      let pesan = `Halo Admin Kopi Ngalam!%0A%0ASaya *Sudah Membayar* pesanan berikut:%0A`;
-      cartItems.forEach((item) => {
-        pesan += `- ${item.name} (${item.quantity} x ${rupiah(item.price)})%0A`;
+    if (!nama || !phone) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Mohon isi nama dan nomor telepon!",
       });
-      pesan += `%0A*Total: ${rupiah(total)}*%0A%0A---%0A*Data Pelanggan*%0ANama: ${nama}%0ANo HP: ${phone}`;
-
-      const whatsappUrl = `https://wa.me/6285961438827?text=${pesan}`;
-      window.open(whatsappUrl, "_blank");
-
-      // Aktifkan ini agar keranjang kosong otomatis setelah checkout
-      Alpine.store("cart").items = [];
-      Alpine.store("cart").quantity = 0;
-      Alpine.store("cart").total = 0;
-
-      // Menutup shopping cart agar tidak menghalangi layar
-      document.querySelector(".shopping-cart").classList.remove("active");
+      return;
     }
+
+    Swal.fire({
+      title: "Selesaikan Pembayaran",
+      text: `Total yang harus dibayar: ${rupiah(total)}`,
+      imageUrl: "img/qr/qr-code.jpeg", 
+      imageWidth: 300,
+      imageHeight: 370,
+      imageAlt: "QR Code Pembayaran",
+      showCancelButton: true,
+      confirmButtonText: "Saya Sudah Bayar",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#b6895b",
+    }).then((result) => {
+      
+      if (result.isConfirmed) {
+        // --- PROSES GOOGLE SHEETS ---
+        const daftarPesanan = cartItems
+          .map((item) => `${item.name} (${item.quantity}x)`)
+          .join(", ");
+
+        // Perbaikan format URLSearchParams untuk menghindari error CORS di Google Sheets
+        const dataKeSpreadsheet = new URLSearchParams();
+        dataKeSpreadsheet.append('nama', nama);
+        dataKeSpreadsheet.append('email', email);
+        dataKeSpreadsheet.append('phone', phone);
+        dataKeSpreadsheet.append('pesanan', daftarPesanan);
+        dataKeSpreadsheet.append('total', total);
+
+        const scriptURL = "https://script.google.com/macros/s/AKfycbwShqYDm_lmilYXIEpHy04nBvywpzrXWPc1SlruF6AsOvNHqyt1VoVOMxVtbFRDsaCU/exec";
+
+        fetch(scriptURL, {
+          method: "POST",
+          body: dataKeSpreadsheet,
+        })
+          .then((response) => console.log("Berhasil rekam ke Sheets!"))
+          .catch((error) => console.error("Gagal rekam:", error));
+
+        // --- PROSES HISTORY (Dipindah ke sini, tempat yang benar) ---
+        const newHistoryEntry = {
+          date: new Date().toLocaleString('id-ID'),
+          items: daftarPesanan,
+          total: total
+        };
+
+        const currentHistory = JSON.parse(localStorage.getItem("kopi-history")) || [];
+        currentHistory.unshift(newHistoryEntry);
+        localStorage.setItem("kopi-history", JSON.stringify(currentHistory));
+
+        // --- PROSES WHATSAPP ---
+        let pesan = `Halo Admin Kopi Ngalam!%0A%0ASaya *Sudah Membayar* pesanan berikut:%0A`;
+        cartItems.forEach((item) => {
+          pesan += `- ${item.name} (${item.quantity} x ${rupiah(item.price)})%0A`;
+        });
+        pesan += `%0A*Total: ${rupiah(total)}*%0A%0A---%0A*Data Pelanggan*%0ANama: ${nama}%0ANo HP: ${phone}`;
+
+        const whatsappUrl = `https://wa.me/6285961438827?text=${pesan}`;
+        window.open(whatsappUrl, "_blank");
+
+        // Kosongkan keranjang
+        Alpine.store("cart").items = [];
+        Alpine.store("cart").quantity = 0;
+        Alpine.store("cart").total = 0;
+
+        document.querySelector(".shopping-cart").classList.remove("active");
+      }
+    });
   });
-});
+}
