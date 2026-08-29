@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Admin - Kopi Ngalam</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css">
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-card">
+      <a class="brand" href="../index.html">kopi<span>ngalam</span></a>
+      <p class="eyebrow">ADMINISTRATOR</p>
+      <h1>Masuk ke Dashboard</h1>
+      <p class="subtitle">Kelola produk, pesanan, dan pengaturan toko.</p>
+
+      <form id="adminLoginForm" autocomplete="on">
+        <label for="username">Username</label>
+        <div class="input-wrap">
+          <i data-feather="user"></i>
+          <input id="username" name="username" type="text" placeholder="Masukkan username" autocomplete="username" required>
+        </div>
+
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <i data-feather="lock"></i>
+          <input id="password" name="password" type="password" placeholder="Masukkan password" autocomplete="current-password" required>
+          <button type="button" id="togglePassword" aria-label="Tampilkan password">
+            <i data-feather="eye"></i>
+          </button>
+        </div>
+
+        <button class="login-button" id="loginButton" type="submit">
+          <span id="loginText">Masuk sebagai Admin</span>
+          <span id="loginLoading" hidden>Memeriksa...</span>
+        </button>
+      </form>
+
+      <a class="back-link" href="../index.html">← Kembali ke website</a>
+    </section>
+  </main>
+
+<a class="back-link" href="../index.html">← Kembali ke website</a>
+    </section>
+  </main>
+
+  <!-- 1. CDN Library Supabase JS (WAJIB PALING ATAS) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 2. File Konfigurasi Supabase Kamu -->
+  <script src="supabase-config.js"></script>
+
+  <!-- 3. Logika JS Login -->
+  <script src="login.js"></script>
+
+</body>
+</html>

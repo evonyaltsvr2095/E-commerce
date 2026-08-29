@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kopi Ngalam</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,300;0,400;0,700;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <!-- Pembayaran -->
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- My Style -->
+    <link rel="stylesheet" href="CSS/style.css" />
+
+    <!-- AlphineJs -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="src/supabase-config.js"></script>
+
+    <!-- App -->
+    <script src="src/app.js"></script>
+  </head>
+
+  <body x-data="products">
+    <!-- Navbar start -->
+    <nav class="navbar">
+      <a href="#" class="navbar-logo">kopi<span>ngalam</span></a>
+
+      <div class="navbar-nav">
+        <a href="#home">Home</a>
+        <a href="#about">Tentang Kami</a>
+        <a href="#products">Produk</a>
+        <a href="#contact">Kontak</a>
+      </div>
+
+      <div class="navbar-extra">
+        <a href="#" id="search-button"><i data-feather="search"></i></a>
+        <a href="#" id="shopping-cart-button"
+          ><i data-feather="shopping-cart"></i>
+          <span
+            class="quantity-badge"
+            x-show="$store.cart.quantity"
+            x-text="$store.cart.quantity"
+          ></span
+        ></a>
+        <a href="#" id="history-button"><i data-feather="clock"></i></a>
+        <a href="#" id="hamburger-menu"><i data-feather="menu"></i></a>
+      </div>
+
+      <!-- Search Form start -->
+      <div class="search-form">
+        <input type="search" id="search-box" placeholder="search here..." />
+        <label for="search-box"><i data-feather="search"></i></label>
+      </div>
+      <!-- Search Form end -->
+
+      <!-- Shopping Cart start -->
+      <div class="shopping-cart">
+        <template x-for="(item, index) in $store.cart.items" :key="index">
+        <div class="cart-item">
+          <img :src="`img/products/${item.img}`" :alt="item.name" />
+          <div class="item-detail">
+            <h3 x-text="item.name"></h3>
+            <div class="item-price">
+            <span x-text="rupiah(item.price)"></span> &times;
+            <button id="remove" @click="$store.cart.remove(item.id)">&minus;</button>
+            <span x-text="item.quantity"></span>
+            <button id="add" @click="$store.cart.add(item)">&plus;</button> &equals;
+            <span x-text="rupiah(item.total)"></span>
+          </div>
+        </div>
+        </template>
+        <h4 x-show="!$store.cart.items.length">Cart Is Empty</h4>
+        <h4 x-show="$store.cart.items.length">Total : <span x-text="rupiah($store.cart.total)"></span></h4>
+
+        <div class="form-container" x-show="$store.cart.items.length">
+          <form action="" id="checkoutForm">
+            <h5>Customer Information</h5>
+
+            <label for="name">
+              <span>Nama</span>
+              <input type="text" name="name" id="name">
+            </label>
+            <label for="email">
+              <span>Email</span>
+              <input type="email" name="email" id="email">
+            </label>
+            <label for="phone">
+              <span>Phone</span>
+              <input type="number" name="phone" id="phone" autocomplete="off">
+            </label>
+            <button class="checkout-button" type="submit" id="checkout">Checkout</button>
+          </form>
+        </div>
+      </div>
+      <!-- Shopping Cart end -->
+    </nav>
+    <!-- Navbar end -->
+
+    <!-- Hero Section start -->
+    <section class="hero" id="home">
+      <div class="mask-container">
+        <main class="content">
+          <h1>Nikmati Secangkir <span>Kopi</span></h1>
+          <p>
+            Dengan cita rasa terbaik dari dataran tinggi Malang - Dampit, kami menyajikan
+            kopi berkualitas tinggi untuk Anda nikmati setiap hari.
+          </p>
+        </main>
+      </div>
+    </section>
+    <!-- Hero Section end -->
+
+    <!-- About Section start -->
+    <section id="about" class="about">
+      <h2><span>Tentang</span> Kami</h2>
+
+      <div class="row">
+        <div class="about-img">
+          <img src="img/tentang-kami.jpg" alt="Tentang Kami" />
+        </div>
+        <div class="content">
+          <h3>Kenapa memilih kopi kami?</h3>
+          <p>
+            dengan pengalaman bertahun-tahun dalam menyajikan kopi terbaik, kami
+            berkomitmen untuk memberikan kualitas dan rasa yang tak terlupakan.
+          </p>
+          <p>
+            Kami hanya menggunakan biji kopi pilihan yang diproses dengan cermat
+            untuk memastikan setiap tegukan memberikan kenikmatan maksimal.
+          </p>
+        </div>
+      </div>
+    </section>
+    <!-- About Section end -->
+
+
+    <!-- Products Section start -->
+    <section class="products" id="products">
+      <h2><span>Produk</span> Kami</h2>
+      <p>
+        Berikut adalah beberapa produk yang kami tawarkan kepada
+        Anda.
+      </p>
+
+      <div class="row">
+        <template x-for="(item, index) in items" :key="index">
+          <div class="product-card">
+            <div class="product-icons">
+  <a href="#" @click.prevent="$store.cart.add(item)">
+    <i data-feather="shopping-cart"></i>
+  </a>
+  <a href="#" class="item-detail-button" @click.prevent="changeItem(item)">
+                <i data-feather="eye"></i>
+</a>
+</div>
+            <div class="product-image">
+              <img :src="`img/products/${item.img}`" alt="item.name" />
+            </div>
+            <div class="product-content">
+              <h3 x-text="item.name"></h3>
+              <div class="product-stars">
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star" class="star-full"></i>
+                <i data-feather="star"></i>
+              </div>
+              <div class="product-price" x-text="rupiah(item.price)"></div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+    <!-- Products Section end -->
+
+    <!-- Contact Section Start -->
+    <section id="contact" class="contact">
+      <h2><span>Kontak</span> Kami</h2>
+      <div class="row">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.0!2d112.7343!3d-8.0303538!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOMKwMDEnNTMuMyJTIDExMsKwNDQnMDMuNSJF!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid"
+          allowfullscreen=""
+          loading="lazy"
+          class="map"
+        ></iframe>
+        <form action="">
+          <div class="input-group">
+            <i data-feather="user"></i>
+            <input
+              id="nama"
+              type="text"
+              pattern="[A-Za-z]+"
+              title="Hanya huruf yang diizinkan"
+              placeholder="Nama"
+              required
+            />
+          </div>
+          <div class="input-group">
+            <i data-feather="mail"></i>
+            <input
+              id="email"
+              type="email"
+              title="tolong isikan email anda!"
+              placeholder="example@gmail.com"
+              required
+            />
+          </div>
+          <div class="input-group">
+            <i data-feather="phone"></i>
+            <input id="wa" type="number" placeholder="No WA" required />
+          </div>
+          <button type="button" onclick="kirimKeWa()" class="btn">
+            Kirim pesan
+          </button>
+        </form>
+      </div>
+    </section>
+    <!-- Contact Section End -->
+
+    <!-- Footer start -->
+    <footer>
+      <div class="socials">
+        <a
+          href="https://www.instagram.com/iqbal77321?igsh=bXJ1OXQ4MHdibW50"
+          target="_blank"
+          ><i data-feather="instagram"></i
+        ></a>
+      </div>
+
+      <div class="links">
+        <a href="#home">Home</a>
+        <a href="#about">Tentang Kami</a>
+        <a href="#contact">Kontak</a>
+      </div>
+
+      <div class="credit">
+        <p>Created by <a href="https://fairuz-iqbal-al-farobi.vercel.app/" target="_blank" rel="noopener noreferrer"> fairuziqbal </a>. | &copy; 2026.</p>
+        <p class="admin-access"><a href="admin/login.html">Admin</a></p>
+      </div>
+    </footer>
+    <!-- Footer end -->
+
+    <!-- Modal Box Item Detail start -->
+    <div class="modal" id="item-detail-modal">
+  <div class="modal-container">
+    <a href="#" class="close-icon" @click.prevent="document.querySelector('#item-detail-modal').style.display='none'">
+      <i data-feather="x"></i>
+    </a>
+    
+    <div class="modal-content">
+      <img :src="`img/products/${currentItem.img}`" :alt="currentItem.name" />
+      
+      <div class="product-content">
+        <h3 x-text="currentItem.name"></h3>
+        <p x-text="currentItem.desc"></p>
+        
+        <div class="product-stars">
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star" class="star-full"></i>
+          <i data-feather="star"></i>
+        </div>
+        
+        <div class="product-price">
+          <span x-text="rupiah(currentItem.price)"></span>
+        </div>
+        
+        <a href="#" @click.prevent="$store.cart.add(currentItem)">
+          <i data-feather="shopping-cart"></i> <span>add to cart</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+    <!-- Modal Box Item Detail end -->
+
+<!-- ======================================================
+     HISTORY / RIWAYAT PESANAN
+====================================================== -->
+
+<div class="modal" id="history-modal">
+
+  <div class="modal-container">
+
+    <!-- Tombol tutup -->
+    <a
+      href="#"
+      class="close-icon"
+      id="close-history"
+    >
+      <i data-feather="x"></i>
+    </a>
+
+
+    <div
+      class="modal-content"
+      style="display: block; width: 100%;"
+      x-data="orderHistory()"
+    >
+
+      <!-- Judul -->
+      <h2 style="margin-bottom: 1rem;">
+        Riwayat Pesanan
+      </h2>
+
+
+      <!-- ==========================================
+           FORM NOMOR HP
+      =========================================== -->
+
+      <div style="margin-bottom: 20px;">
+
+        <label
+          for="history-phone"
+          style="
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+          "
+        >
+          Nomor WhatsApp
+        </label>
+
+
+        <input
+          type="tel"
+          id="history-phone"
+          x-model="phone"
+          placeholder="Contoh: 081122223333"
+          autocomplete="off"
+          style="
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+          "
+        />
+
+
+        <button
+          type="button"
+          @click="cariPesanan()"
+          style="
+            margin-top: 10px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #b6895b;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+          "
+        >
+          <span x-show="!loading">
+            Cek Riwayat Pesanan
+          </span>
+
+          <span x-show="loading">
+            Mencari...
+          </span>
+        </button>
+
+      </div>
+
+
+      <!-- ==========================================
+           PESAN ERROR
+      =========================================== -->
+
+      <div
+        x-show="errorMessage"
+        x-text="errorMessage"
+        style="
+          background: #f8d7da;
+          color: #842029;
+          padding: 12px;
+          border-radius: 8px;
+          margin-bottom: 15px;
+        "
+      ></div>
+
+
+      <!-- ==========================================
+           HASIL RIWAYAT
+      =========================================== -->
+
+      <div
+        x-show="historyItems.length > 0"
+        style="
+          max-height: 400px;
+          overflow-y: auto;
+        "
+      >
+
+        <template
+          x-for="(order, index) in historyItems"
+          :key="order.idOrder || index"
+        >
+
+          <div
+            style="
+              border: 1px solid #ddd;
+              border-radius: 10px;
+              padding: 15px;
+              margin-bottom: 12px;
+              background: #fff;
+            "
+          >
+
+            <!-- ID ORDER -->
+
+            <p style="margin: 0 0 5px;">
+              <strong>ID Order:</strong>
+              <span x-text="order.idOrder"></span>
+            </p>
+
+
+            <!-- TANGGAL -->
+
+            <p style="margin: 0 0 8px; font-size: 0.9rem;">
+              <strong>Tanggal:</strong>
+              <span x-text="order.tanggal"></span>
+            </p>
+
+
+            <hr />
+
+
+            <!-- PESANAN -->
+
+            <p style="margin: 8px 0;">
+              <strong>Pesanan:</strong>
+            </p>
+
+            <p
+              x-text="order.pesanan"
+              style="margin: 0 0 8px;"
+            ></p>
+
+
+            <!-- TOTAL -->
+
+            <p style="margin: 8px 0;">
+              <strong>Total:</strong>
+
+              <span
+                x-text="rupiah(Number(order.total) || 0)"
+              ></span>
+            </p>
+
+
+            <!-- STATUS PEMBAYARAN -->
+
+            <p style="margin: 8px 0;">
+
+              <strong>Pembayaran:</strong>
+
+              <span
+                x-text="order.statusPembayaran || 'Belum Bayar'"
+              ></span>
+
+            </p>
+
+
+            <!-- STATUS PESANAN -->
+
+            <p style="margin: 8px 0;">
+
+              <strong>Status Pesanan:</strong>
+
+              <span
+                x-text="order.statusPesanan || 'Pesanan Baru'"
+              ></span>
+
+            </p>
+
+          </div>
+
+        </template>
+
+      </div>
+
+
+      <!-- ==========================================
+           BELUM ADA DATA
+      =========================================== -->
+
+      <div
+        x-show="!loading && searched && historyItems.length === 0 && !errorMessage"
+        style="
+          text-align: center;
+          padding: 20px;
+        "
+      >
+
+        <p>
+          Tidak ditemukan pesanan dengan nomor WhatsApp tersebut.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ======================================================
+     HISTORY END
+====================================================== -->
+
+    <!-- Feather Icons -->
+    <script>
+  // Menggambar ikon feather secara default
+  feather.replace();
+
+  // Menunggu Alpine selesai me-render data (seperti produk), lalu gambar ulang ikonnya
+  document.addEventListener('alpine:initialized', () => {
+    setTimeout(() => {
+      feather.replace();
+    }, 100);
+  });
+</script>
+
+
+    <!-- My Javascript -->
+    <script src="js/script.js"></script>
+  </body>
+</html>

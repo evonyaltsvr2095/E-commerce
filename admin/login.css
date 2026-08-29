@@ -1,0 +1,133 @@
+:root {
+  --primary: #b6895b;
+  --bg: #010101;
+  --card: #171717;
+  --text: #fff;
+  --muted: #aaa;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(182,137,91,.25), transparent 35%),
+    #010101;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: min(430px, 100%);
+  background: rgba(23,23,23,.96);
+  border: 1px solid rgba(182,137,91,.35);
+  border-radius: 20px;
+  padding: 38px 32px;
+  box-shadow: 0 25px 80px rgba(0,0,0,.45);
+}
+
+.brand {
+  display: inline-block;
+  color: #fff;
+  text-decoration: none;
+  font-size: 2rem;
+  font-weight: 700;
+  font-style: italic;
+}
+.brand span { color: var(--primary); }
+
+.eyebrow {
+  margin-top: 28px;
+  color: var(--primary);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+h1 {
+  margin-top: 5px;
+  font-size: 1.75rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.6;
+  margin: 8px 0 28px;
+}
+
+label {
+  display: block;
+  margin: 17px 0 7px;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+.input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  background: #0e0e0e;
+}
+
+.input-wrap:focus-within { border-color: var(--primary); }
+.input-wrap svg { width: 18px; color: var(--primary); flex: 0 0 auto; }
+
+.input-wrap input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+}
+
+.input-wrap button {
+  border: 0;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.input-wrap button svg { color: #aaa; }
+
+.login-button {
+  width: 100%;
+  margin-top: 25px;
+  min-height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.login-button:disabled { opacity: .65; cursor: wait; }
+
+.back-link {
+  display: block;
+  margin-top: 22px;
+  color: #aaa;
+  text-align: center;
+  text-decoration: none;
+  font-size: .85rem;
+}
+.back-link:hover { color: var(--primary); }
+
+@media (max-width: 450px) {
+  .login-card { padding: 30px 22px; }
+}

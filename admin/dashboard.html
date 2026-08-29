@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Admin - Kopi Ngalam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="dashboard.css" />
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="../index.html">kopi<span>ngalam</span></a>
+
+      <nav>
+        <p class="nav-title">MAIN</p>
+        <a class="nav-link active" href="#" data-tab="dashboard"
+          ><i data-feather="home"></i> Dashboard</a
+        >
+        <a class="nav-link" href="#" data-tab="setting"
+          ><i data-feather="coffee"></i> Setting Menu</a
+        >
+        <a class="nav-link" href="#" data-tab="pesanan"
+          ><i data-feather="package"></i> Pesanan</a
+        >
+        <a class="nav-link" href="#" data-tab="laporan"
+          ><i data-feather="bar-chart-2"></i> Laporan</a
+        >
+      </nav>
+
+      <button class="logout" id="logoutButton">
+        <i data-feather="log-out"></i> Logout
+      </button>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" aria-label="Buka menu">
+          <i data-feather="menu"></i>
+        </button>
+        <div>
+          <p class="eyebrow">ADMINISTRATOR</p>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="admin-user">
+          <i data-feather="user"></i>
+          <span id="adminUsername">Admin</span>
+        </div>
+      </header>
+
+      <!-- TAB 1: DASHBOARD UTAMA -->
+      <div id="tab-dashboard" class="tab-content">
+        <section class="welcome">
+          <div>
+            <p class="eyebrow">KOPI NGALAM</p>
+            <h2>Selamat Datang di Panel Admin</h2>
+            <p>
+              Kelola menu minuman, harga, dan ketersediaan produk secara
+              langsung dari halaman ini.
+            </p>
+          </div>
+        </section>
+
+        <section class="cards">
+          <article class="stat-card">
+            <span class="icon"><i data-feather="shield"></i></span>
+            <div>
+              <p>Status</p>
+              <strong>Authenticated</strong>
+            </div>
+          </article>
+          <article class="stat-card">
+            <span class="icon"><i data-feather="coffee"></i></span>
+            <div>
+              <p>Total Produk</p>
+              <strong id="totalProductsCount">0</strong>
+            </div>
+          </article>
+          <article class="stat-card">
+            <span class="icon"><i data-feather="shopping-bag"></i></span>
+            <div>
+              <p>Pesanan</p>
+              <strong>Aktif</strong>
+            </div>
+          </article>
+        </section>
+      </div>
+
+      <!-- TAB 2: SETTING / MANAJEMEN PRODUK -->
+      <div id="tab-setting" class="tab-content" style="display: none">
+        <section class="next-step" style="margin-top: 0">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <div>
+              <h3>Kelola Menu & Harga</h3>
+              <p style="color: #666; font-size: 0.9rem">
+                Tambah menu baru atau perbarui harga produk kopi Anda.
+              </p>
+            </div>
+            <button
+              id="btnAddProduct"
+              style="
+                padding: 10px 18px;
+                background: #000;
+                color: #fff;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <i data-feather="plus"></i> Tambah Menu
+            </button>
+          </div>
+
+          <div style="overflow-x: auto">
+            <table
+              style="
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+                background: #fff;
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid #eee;
+              "
+            >
+              <thead>
+                <tr
+                  style="
+                    background: #f8f9fa;
+                    border-bottom: 2px solid #eee;
+                    text-align: left;
+                  "
+                >
+                  <th style="padding: 12px 15px">Gambar</th>
+                  <th style="padding: 12px 15px">Nama Menu</th>
+                  <th style="padding: 12px 15px">Deskripsi</th>
+                  <th style="padding: 12px 15px">Harga</th>
+                  <th style="padding: 12px 15px">Status</th>
+                  <th style="padding: 12px 15px; text-align: center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody">
+                <tr>
+                  <td
+                    colspan="6"
+                    style="text-align: center; padding: 20px; color: #888"
+                  >
+                    Memuat data menu...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 3: PESANAN -->
+      <div id="tab-pesanan" class="tab-content" style="display: none">
+        <section class="next-step" style="margin-top: 0">
+          <div style="margin-bottom: 20px">
+            <h3>Daftar Pesanan</h3>
+            <p style="color: #666; font-size: 0.9rem">
+              Pesanan yang masuk dari website customer akan muncul di sini.
+            </p>
+          </div>
+
+          <div style="overflow-x: auto">
+            <table
+              style="
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+                background: #fff;
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid #eee;
+              "
+            >
+              <thead>
+                <tr
+                  style="
+                    background: #f8f9fa;
+                    border-bottom: 2px solid #eee;
+                    text-align: left;
+                  "
+                >
+                  <th style="padding: 12px 15px">Waktu</th>
+                  <th style="padding: 12px 15px">Pelanggan</th>
+                  <th style="padding: 12px 15px">Pesanan</th>
+                  <th style="padding: 12px 15px">Total</th>
+                  <th style="padding: 12px 15px">Bayar</th>
+                  <th style="padding: 12px 15px">Status</th>
+                  <th style="padding: 12px 15px; text-align: center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="orderTableBody">
+                <tr>
+                  <td
+                    colspan="7"
+                    style="text-align: center; padding: 20px; color: #888"
+                  >
+                    Memuat data pesanan...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 4: LAPORAN -->
+      <div id="tab-laporan" class="tab-content" style="display: none">
+        <section class="next-step" style="margin-top: 0">
+          <div style="margin-bottom: 20px">
+            <h3>Laporan Penjualan</h3>
+            <p style="color: #666; font-size: 0.9rem">
+              Ringkasan dari seluruh pesanan yang tercatat.
+            </p>
+          </div>
+
+          <!-- Kartu ringkasan -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+              gap: 15px;
+              margin-bottom: 25px;
+            "
+          >
+            <div
+              style="
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                padding: 18px;
+              "
+            >
+              <div style="color: #888; font-size: 0.85rem; margin-bottom: 6px">
+                Total Pendapatan (Sudah Bayar)
+              </div>
+              <div
+                id="lapTotalPendapatan"
+                style="font-size: 1.4rem; font-weight: 700; color: #1a1a1a"
+              >
+                Rp 0
+              </div>
+            </div>
+
+            <div
+              style="
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                padding: 18px;
+              "
+            >
+              <div style="color: #888; font-size: 0.85rem; margin-bottom: 6px">
+                Total Pesanan
+              </div>
+              <div
+                id="lapTotalPesanan"
+                style="font-size: 1.4rem; font-weight: 700; color: #1a1a1a"
+              >
+                0
+              </div>
+            </div>
+
+            <div
+              style="
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                padding: 18px;
+              "
+            >
+              <div style="color: #888; font-size: 0.85rem; margin-bottom: 6px">
+                Belum Dibayar
+              </div>
+              <div
+                id="lapBelumBayar"
+                style="font-size: 1.4rem; font-weight: 700; color: #d93025"
+              >
+                0
+              </div>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin-bottom: 10px;
+            "
+          >
+            <!-- Produk terlaris -->
+            <div>
+              <h4 style="margin-bottom: 10px; color: #1a1a1a">Menu Terlaris</h4>
+              <table
+                style="
+                  width: 100%;
+                  border-collapse: collapse;
+                  background: #fff;
+                  border: 1px solid #eee;
+                  border-radius: 8px;
+                  overflow: hidden;
+                "
+              >
+                <thead>
+                  <tr
+                    style="
+                      background: #f8f9fa;
+                      border-bottom: 2px solid #eee;
+                      text-align: left;
+                    "
+                  >
+                    <th style="padding: 10px 15px; color: #1a1a1a">Menu</th>
+                    <th style="padding: 10px 15px; color: #1a1a1a">Terjual</th>
+                  </tr>
+                </thead>
+                <tbody id="lapMenuTerlarisBody">
+                  <tr>
+                    <td
+                      colspan="2"
+                      style="text-align: center; padding: 15px; color: #888"
+                    >
+                      Memuat data...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pendapatan 7 hari terakhir -->
+            <div>
+              <h4 style="margin-bottom: 10px; color: #1a1a1a">
+                7 Hari Terakhir
+              </h4>
+              <table
+                style="
+                  width: 100%;
+                  border-collapse: collapse;
+                  background: #fff;
+                  border: 1px solid #eee;
+                  border-radius: 8px;
+                  overflow: hidden;
+                "
+              >
+                <thead>
+                  <tr
+                    style="
+                      background: #f8f9fa;
+                      border-bottom: 2px solid #eee;
+                      text-align: left;
+                    "
+                  >
+                    <th style="padding: 10px 15px; color: #1a1a1a">Tanggal</th>
+                    <th style="padding: 10px 15px; color: #1a1a1a">
+                      Pendapatan
+                    </th>
+                    <th style="padding: 10px 15px; color: #1a1a1a">Pesanan</th>
+                  </tr>
+                </thead>
+                <tbody id="lap7HariBody">
+                  <tr>
+                    <td
+                      colspan="3"
+                      style="text-align: center; padding: 15px; color: #888"
+                    >
+                      Memuat data...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rekap Bulanan -->
+          <div>
+            <h4 style="margin-bottom: 10px; color: #1a1a1a">
+              Rekap 6 Bulan Terakhir
+            </h4>
+            <table
+              style="
+                width: 100%;
+                border-collapse: collapse;
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                overflow: hidden;
+              "
+            >
+              <thead>
+                <tr
+                  style="
+                    background: #f8f9fa;
+                    border-bottom: 2px solid #eee;
+                    text-align: left;
+                  "
+                >
+                  <th style="padding: 10px 15px; color: #1a1a1a">Bulan</th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">
+                    Pendapatan (Sudah Bayar)
+                  </th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">
+                    Jumlah Pesanan
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="lapBulananBody">
+                <tr>
+                  <td
+                    colspan="3"
+                    style="text-align: center; padding: 15px; color: #888"
+                  >
+                    Memuat data...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="supabase-config.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>
