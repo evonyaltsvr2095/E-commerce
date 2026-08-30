@@ -352,26 +352,22 @@ function simpanHistory(cartItems, total, phone, orderId) {
 // ======================================================
 
 async function kirimKeSupabase(dataPesanan) {
-  // ID dibuat di sisi browser sendiri (bukan diminta balik dari server),
-  // karena customer (anon) sengaja hanya diberi izin INSERT demi keamanan
-  // (tidak boleh membaca pesanan siapapun, termasuk pesanan sendiri).
-  const orderId =
-    typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : "order-" + Date.now();
-
-  const { error } = await supabaseClient.from("orders").insert([
+  // Dipanggil lewat RPC (fungsi database) supaya order_items
+  // (dipakai untuk hitung HPP & kurangi stok bahan otomatis)
+  // ikut terisi dengan aman, tanpa perlu izin INSERT langsung
+  // ke tabel order_items untuk customer (anon).
+  const { data: orderId, error } = await supabaseClient.rpc(
+    "buat_pesanan_dengan_item",
     {
-      id: orderId,
-      customer_name: dataPesanan.nama,
-      customer_email: dataPesanan.email
+      p_customer_name: dataPesanan.nama,
+      p_customer_email: dataPesanan.email
         ? String(dataPesanan.email).trim().toLowerCase()
         : null,
-      customer_phone: String(dataPesanan.phone || "").replace(/\D/g, ""),
-      items: dataPesanan.items,
-      total: dataPesanan.total,
+      p_customer_phone: String(dataPesanan.phone || "").replace(/\D/g, ""),
+      p_items: dataPesanan.items,
+      p_total: dataPesanan.total,
     },
-  ]);
+  );
 
   if (error) {
     console.error("Gagal menyimpan pesanan ke Supabase:", error);

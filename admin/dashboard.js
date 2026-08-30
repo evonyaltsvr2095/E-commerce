@@ -568,14 +568,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   // =========================================================
-  // 9. BAHAN BAKU (ingredients)
+  // 9. BAHAN BAKU (ingredients) + PEMBELIAN (ingredient_purchases)
   // =========================================================
 
   let daftarBahanCache = [];
 
   async function loadIngredients() {
     const tbody = document.getElementById("ingredientTableBody");
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Memuat data...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#888;">Memuat data...</td></tr>`;
 
     const { data, error } = await supabaseClient
       .from("ingredients")
@@ -584,56 +584,105 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (error) {
       console.error("Gagal memuat bahan baku:", error);
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red; padding:20px;">Gagal memuat data.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; padding:20px;">Gagal memuat data.</td></tr>`;
       return;
     }
 
     daftarBahanCache = data || [];
 
     if (daftarBahanCache.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Belum ada bahan baku. Klik "+ Tambah Bahan".</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#888;">Belum ada bahan baku. Klik "+ Tambah Bahan".</td></tr>`;
+    } else {
+      tbody.innerHTML = daftarBahanCache
+        .map((b) => {
+          const stokRendah =
+            Number(b.stock_quantity) <= Number(b.low_stock_threshold || 0);
+          return `
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px 15px; color: #1a1a1a; font-weight: 600;">${b.name}</td>
+            <td style="padding: 12px 15px; color: ${stokRendah ? "#d93025; font-weight:700;" : "#1a1a1a;"}">
+              ${Number(b.stock_quantity).toLocaleString("id-ID")} ${b.unit}
+              ${stokRendah ? ' <span title="Stok menipis">⚠️</span>' : ""}
+            </td>
+            <td style="padding: 12px 15px; color: #1a1a1a;">Rp ${Number(b.cost_per_unit).toLocaleString("id-ID")}/${b.unit}</td>
+            <td style="padding: 12px 15px; color: #1a1a1a;">${b.recipe_unit}</td>
+            <td style="padding: 12px 15px; color: #1a1a1a;">1 ${b.unit} = ${Number(b.conversion_factor).toLocaleString("id-ID")} ${b.recipe_unit}</td>
+            <td style="padding: 12px 15px; text-align: center; white-space: nowrap;">
+              <button onclick="bukaFormBeli(${b.id})" style="background:none; border:none; cursor:pointer; color:#1e7e34;" title="Beli / Tambah Stok">
+                <i data-feather="plus-circle"></i>
+              </button>
+              <button onclick="editIngredient(${b.id})" style="background:none; border:none; cursor:pointer; color:#007bff;" title="Edit">
+                <i data-feather="edit-2"></i>
+              </button>
+              <button onclick="deleteIngredient(${b.id}, '${String(b.name).replace(/'/g, "\\'")}')" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus">
+                <i data-feather="trash-2"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+        })
+        .join("");
+    }
+
+    feather.replace();
+    loadPurchaseHistory();
+  }
+  window.loadIngredients = loadIngredients;
+
+  async function loadPurchaseHistory() {
+    const tbody = document.getElementById("purchaseTableBody");
+    if (!tbody) return;
+
+    const { data, error } = await supabaseClient
+      .from("ingredient_purchases")
+      .select(
+        "id, purchase_date, quantity, total_price, unit_price, ingredients(name, unit)",
+      )
+      .order("purchase_date", { ascending: false })
+      .limit(20);
+
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red; padding:20px;">Gagal memuat riwayat.</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = daftarBahanCache
-      .map((b) => {
-        const stokRendah =
-          Number(b.stock_quantity) <= Number(b.low_stock_threshold || 0);
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Belum ada pembelian tercatat.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data
+      .map((p) => {
+        const tgl = new Date(p.purchase_date).toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
         return `
         <tr style="border-bottom: 1px solid #eee;">
-          <td style="padding: 12px 15px; color: #1a1a1a; font-weight: 600;">${b.name}</td>
-          <td style="padding: 12px 15px; color: #1a1a1a;">${b.unit}</td>
-          <td style="padding: 12px 15px; color: ${stokRendah ? "#d93025; font-weight:700;" : "#1a1a1a;"}">
-            ${Number(b.stock_quantity).toLocaleString("id-ID")} ${b.unit}
-            ${stokRendah ? ' <span title="Stok menipis">⚠️</span>' : ""}
-          </td>
-          <td style="padding: 12px 15px; color: #1a1a1a;">Rp ${Number(b.cost_per_unit).toLocaleString("id-ID")}/${b.unit}</td>
-          <td style="padding: 12px 15px; text-align: center;">
-            <button onclick="editIngredient(${b.id})" style="background:none; border:none; cursor:pointer; color:#007bff; margin-right:8px;" title="Edit">
-              <i data-feather="edit-2"></i>
-            </button>
-            <button onclick="deleteIngredient(${b.id}, '${String(b.name).replace(/'/g, "\\'")}')" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus">
-              <i data-feather="trash-2"></i>
-            </button>
-          </td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">${tgl}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">${p.ingredients?.name || "-"}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">${p.quantity} ${p.ingredients?.unit || ""}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${Number(p.total_price).toLocaleString("id-ID")}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${Number(p.unit_price).toLocaleString("id-ID")}/${p.ingredients?.unit || ""}</td>
         </tr>
       `;
       })
       .join("");
-
-    feather.replace();
   }
-  window.loadIngredients = loadIngredients;
 
   async function bukaFormBahan(existing) {
     const { value: formValues } = await Swal.fire({
       title: existing ? "Edit Bahan Baku" : "Tambah Bahan Baku",
       html:
         `<input id="swal-nama" class="swal2-input" placeholder="Nama bahan (misal: Bubuk Kopi)" value="${existing ? existing.name : ""}">` +
-        `<input id="swal-satuan" class="swal2-input" placeholder="Satuan (misal: gram, ml, pcs)" value="${existing ? existing.unit : ""}">` +
-        `<input id="swal-stok" type="number" step="0.01" class="swal2-input" placeholder="Stok saat ini" value="${existing ? existing.stock_quantity : ""}">` +
-        `<input id="swal-harga" type="number" step="0.01" class="swal2-input" placeholder="Harga per satuan (Rp)" value="${existing ? existing.cost_per_unit : ""}">` +
-        `<input id="swal-batas" type="number" step="0.01" class="swal2-input" placeholder="Batas stok menipis (opsional)" value="${existing ? existing.low_stock_threshold : ""}">`,
+        `<input id="swal-satuan" class="swal2-input" placeholder="Satuan besar/stok (misal: kg, L, pcs)" value="${existing ? existing.unit : ""}">` +
+        `<input id="swal-satuan-resep" class="swal2-input" placeholder="Satuan resep (misal: gram, ml, pcs)" value="${existing ? existing.recipe_unit : ""}">` +
+        `<input id="swal-konversi" type="number" step="0.0001" class="swal2-input" placeholder="1 satuan besar = berapa satuan resep? (misal 1000)" value="${existing ? existing.conversion_factor : "1000"}">` +
+        `<input id="swal-stok" type="number" step="0.01" class="swal2-input" placeholder="Stok saat ini (satuan besar)" value="${existing ? existing.stock_quantity : ""}">` +
+        `<input id="swal-harga" type="number" step="0.01" class="swal2-input" placeholder="Harga per satuan besar (Rp)" value="${existing ? existing.cost_per_unit : ""}">` +
+        `<input id="swal-batas" type="number" step="0.01" class="swal2-input" placeholder="Batas stok menipis, satuan besar (opsional)" value="${existing ? existing.low_stock_threshold : ""}">` +
+        `<p style="font-size:0.8rem; color:#888; text-align:left; margin-top:4px;">Contoh umum: kg → gram (1000), L → ml (1000), pcs → pcs (1).</p>`,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: existing ? "Simpan" : "Tambah",
@@ -641,13 +690,24 @@ document.addEventListener("DOMContentLoaded", async () => {
       preConfirm: () => {
         const name = document.getElementById("swal-nama").value.trim();
         const unit = document.getElementById("swal-satuan").value.trim();
+        const recipeUnit = document
+          .getElementById("swal-satuan-resep")
+          .value.trim();
+        const factor = document.getElementById("swal-konversi").value;
         const stock = document.getElementById("swal-stok").value;
         const cost = document.getElementById("swal-harga").value;
         const threshold = document.getElementById("swal-batas").value;
 
-        if (!name || !unit || stock === "" || cost === "") {
+        if (
+          !name ||
+          !unit ||
+          !recipeUnit ||
+          !factor ||
+          stock === "" ||
+          cost === ""
+        ) {
           Swal.showValidationMessage(
-            "Nama, satuan, stok, dan harga wajib diisi.",
+            "Nama, satuan besar, satuan resep, konversi, stok, dan harga wajib diisi.",
           );
           return false;
         }
@@ -655,6 +715,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         return {
           name,
           unit,
+          recipe_unit: recipeUnit,
+          conversion_factor: parseFloat(factor),
           stock_quantity: parseFloat(stock),
           cost_per_unit: parseFloat(cost),
           low_stock_threshold: threshold ? parseFloat(threshold) : 0,
@@ -718,11 +780,76 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  // Form: catat pembelian bahan (otomatis nambah stok + update harga terbaru)
+  window.bukaFormBeli = async (ingredientId) => {
+    const bahan = daftarBahanCache.find((b) => b.id === ingredientId);
+    if (!bahan) return;
+
+    const { value: formValues } = await Swal.fire({
+      title: `Beli: ${bahan.name}`,
+      html:
+        `<p style="text-align:left; font-size:0.85rem; color:#666;">Stok saat ini: ${bahan.stock_quantity} ${bahan.unit}</p>` +
+        `<input id="swal-tanggal" type="date" class="swal2-input" value="${new Date().toISOString().slice(0, 10)}">` +
+        `<input id="swal-qty" type="number" step="0.01" class="swal2-input" placeholder="Jumlah dibeli (${bahan.unit})">` +
+        `<input id="swal-total" type="number" step="0.01" class="swal2-input" placeholder="Total harga dibayar (Rp)">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Simpan Pembelian",
+      cancelButtonText: "Batal",
+      preConfirm: () => {
+        const date = document.getElementById("swal-tanggal").value;
+        const qty = document.getElementById("swal-qty").value;
+        const total = document.getElementById("swal-total").value;
+
+        if (
+          !date ||
+          !qty ||
+          parseFloat(qty) <= 0 ||
+          !total ||
+          parseFloat(total) <= 0
+        ) {
+          Swal.showValidationMessage(
+            "Tanggal, jumlah, dan total harga wajib diisi dengan benar.",
+          );
+          return false;
+        }
+
+        return {
+          purchase_date: date,
+          quantity: parseFloat(qty),
+          total_price: parseFloat(total),
+          unit_price: parseFloat(total) / parseFloat(qty),
+        };
+      },
+    });
+
+    if (!formValues) return;
+
+    const { error } = await supabaseClient.from("ingredient_purchases").insert([
+      {
+        ingredient_id: ingredientId,
+        ...formValues,
+      },
+    ]);
+
+    if (error) {
+      Swal.fire("Gagal!", error.message, "error");
+    } else {
+      Swal.fire(
+        "Berhasil!",
+        `Stok ${bahan.name} bertambah ${formValues.quantity} ${bahan.unit}.`,
+        "success",
+      );
+      loadIngredients();
+    }
+  };
+
   // =========================================================
-  // 10. RESEP MENU (product_ingredients)
+  // 10. RESEP MENU (recipes & recipe_items)
   // =========================================================
 
   let daftarBahanUntukResep = [];
+  let recipeIdAktif = null; // recipe_id untuk produk yang sedang dipilih
 
   async function loadResepSelector() {
     const select = document.getElementById("resepProductSelect");
@@ -743,7 +870,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         .map((p) => `<option value="${p.id}">${p.name}</option>`)
         .join("");
 
-    // Muat juga daftar bahan untuk dropdown "Tambah Bahan"
     const { data: bahan } = await supabaseClient
       .from("ingredients")
       .select("*")
@@ -754,30 +880,69 @@ document.addEventListener("DOMContentLoaded", async () => {
     bahanSelect.innerHTML =
       `<option value="">-- Pilih bahan --</option>` +
       daftarBahanUntukResep
-        .map((b) => `<option value="${b.id}">${b.name} (${b.unit})</option>`)
+        .map(
+          (b) =>
+            `<option value="${b.id}">${b.name} (${b.recipe_unit})</option>`,
+        )
         .join("");
 
     document.getElementById("resepContainer").style.display = "none";
+    recipeIdAktif = null;
   }
   window.loadResepSelector = loadResepSelector;
+
+  // Pastikan produk sudah punya baris di tabel recipes, kembalikan recipe_id-nya
+  async function pastikanRecipeAda(productId) {
+    const { data: existing } = await supabaseClient
+      .from("recipes")
+      .select("id")
+      .eq("product_id", productId)
+      .maybeSingle();
+
+    if (existing) return existing.id;
+
+    const { data: created, error } = await supabaseClient
+      .from("recipes")
+      .insert([{ product_id: productId }])
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("Gagal membuat resep:", error);
+      return null;
+    }
+
+    return created.id;
+  }
 
   async function loadResepUntukProduk(productId) {
     const container = document.getElementById("resepContainer");
     const tbody = document.getElementById("resepTableBody");
     const totalEl = document.getElementById("resepTotalHpp");
+    const jumlahLabel = document.getElementById("resepJumlahLabel");
 
     if (!productId) {
       container.style.display = "none";
+      recipeIdAktif = null;
       return;
     }
 
     container.style.display = "block";
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px; color:#888;">Memuat...</td></tr>`;
 
+    recipeIdAktif = await pastikanRecipeAda(productId);
+
+    if (!recipeIdAktif) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red; padding:15px;">Gagal menyiapkan resep untuk menu ini.</td></tr>`;
+      return;
+    }
+
     const { data, error } = await supabaseClient
-      .from("product_ingredients")
-      .select("id, quantity_used, ingredients(id, name, unit, cost_per_unit)")
-      .eq("product_id", productId);
+      .from("recipe_items")
+      .select(
+        "id, quantity_used, ingredients(id, name, unit, recipe_unit, conversion_factor, cost_per_unit)",
+      )
+      .eq("recipe_id", recipeIdAktif);
 
     if (error) {
       tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red; padding:15px;">Gagal memuat resep.</td></tr>`;
@@ -794,14 +959,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     tbody.innerHTML = data
       .map((r) => {
-        const biaya =
-          Number(r.quantity_used) * Number(r.ingredients.cost_per_unit);
+        const ing = r.ingredients;
+        // biaya per satuan resep = harga per satuan besar / faktor konversi
+        const biayaPerSatuanResep =
+          Number(ing.cost_per_unit) / Number(ing.conversion_factor || 1);
+        const biaya = Number(r.quantity_used) * biayaPerSatuanResep;
         totalHpp += biaya;
         return `
         <tr style="border-bottom: 1px solid #eee;">
-          <td style="padding: 10px 15px; color: #1a1a1a;">${r.ingredients.name}</td>
-          <td style="padding: 10px 15px; color: #1a1a1a;">${r.quantity_used} ${r.ingredients.unit}</td>
-          <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${biaya.toLocaleString("id-ID")}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">${ing.name}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">${r.quantity_used} ${ing.recipe_unit}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${biaya.toLocaleString("id-ID", { maximumFractionDigits: 0 })}</td>
           <td style="padding: 10px 15px; text-align: center;">
             <button onclick="hapusBahanResep(${r.id})" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus">
               <i data-feather="trash-2"></i>
@@ -812,7 +980,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       })
       .join("");
 
-    totalEl.textContent = "Rp " + totalHpp.toLocaleString("id-ID");
+    totalEl.textContent =
+      "Rp " + totalHpp.toLocaleString("id-ID", { maximumFractionDigits: 0 });
     feather.replace();
   }
 
@@ -823,13 +992,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
   document
+    .getElementById("resepBahanSelect")
+    .addEventListener("change", (e) => {
+      const bahan = daftarBahanUntukResep.find(
+        (b) => String(b.id) === e.target.value,
+      );
+      const label = document.getElementById("resepJumlahLabel");
+      label.textContent = bahan
+        ? `Jumlah (${bahan.recipe_unit})`
+        : "Jumlah (satuan resep)";
+    });
+
+  document
     .getElementById("resepTambahBtn")
     .addEventListener("click", async () => {
       const productId = document.getElementById("resepProductSelect").value;
       const ingredientId = document.getElementById("resepBahanSelect").value;
       const jumlah = document.getElementById("resepJumlahInput").value;
 
-      if (!productId) {
+      if (!productId || !recipeIdAktif) {
         Swal.fire("Oops", "Pilih menu terlebih dahulu.", "warning");
         return;
       }
@@ -838,13 +1019,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      const { error } = await supabaseClient.from("product_ingredients").upsert(
+      const { error } = await supabaseClient.from("recipe_items").upsert(
         {
-          product_id: parseInt(productId, 10),
+          recipe_id: recipeIdAktif,
           ingredient_id: parseInt(ingredientId, 10),
           quantity_used: parseFloat(jumlah),
         },
-        { onConflict: "product_id,ingredient_id" },
+        { onConflict: "recipe_id,ingredient_id" },
       );
 
       if (error) {
@@ -852,6 +1033,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         document.getElementById("resepBahanSelect").value = "";
         document.getElementById("resepJumlahInput").value = "";
+        document.getElementById("resepJumlahLabel").textContent =
+          "Jumlah (satuan resep)";
         loadResepUntukProduk(productId);
       }
     });
@@ -859,7 +1042,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.hapusBahanResep = async (id) => {
     const productId = document.getElementById("resepProductSelect").value;
     const { error } = await supabaseClient
-      .from("product_ingredients")
+      .from("recipe_items")
       .delete()
       .eq("id", id);
 
@@ -871,18 +1054,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   // =========================================================
-  // 11. PENGELUARAN OPERASIONAL (expenses)
+  // 11. PENGELUARAN OPERASIONAL (expenses + expense_categories)
   // =========================================================
 
   let daftarPengeluaranCache = [];
+  let daftarKategoriCache = [];
+
+  async function loadExpenseCategories() {
+    const { data, error } = await supabaseClient
+      .from("expense_categories")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (!error) {
+      daftarKategoriCache = data || [];
+    }
+    return daftarKategoriCache;
+  }
 
   async function loadExpenses() {
     const tbody = document.getElementById("expenseTableBody");
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Memuat data...</td></tr>`;
 
+    await loadExpenseCategories();
+
     const { data, error } = await supabaseClient
       .from("expenses")
-      .select("*")
+      .select("id, description, amount, expense_date, expense_categories(name)")
       .order("expense_date", { ascending: false });
 
     if (error) {
@@ -908,7 +1106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return `
         <tr style="border-bottom: 1px solid #eee;">
           <td style="padding: 12px 15px; color: #1a1a1a;">${tgl}</td>
-          <td style="padding: 12px 15px; color: #1a1a1a;">${e.category}</td>
+          <td style="padding: 12px 15px; color: #1a1a1a;">${e.expense_categories?.name || "-"}</td>
           <td style="padding: 12px 15px; color: #1a1a1a;">${e.description || "-"}</td>
           <td style="padding: 12px 15px; color: #1a1a1a; font-weight: 600;">Rp ${Number(e.amount).toLocaleString("id-ID")}</td>
           <td style="padding: 12px 15px; text-align: center;">
@@ -928,10 +1126,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   document
     .getElementById("tambahPengeluaranBtn")
     .addEventListener("click", async () => {
+      await loadExpenseCategories();
+
+      if (daftarKategoriCache.length === 0) {
+        Swal.fire(
+          "Belum ada kategori",
+          "Tambah kategori pengeluaran dulu lewat tombol 'Kelola Kategori'.",
+          "info",
+        );
+        return;
+      }
+
+      const optionsHtml = daftarKategoriCache
+        .map((k) => `<option value="${k.id}">${k.name}</option>`)
+        .join("");
+
       const { value: formValues } = await Swal.fire({
         title: "Tambah Pengeluaran",
         html:
-          `<input id="swal-kategori" class="swal2-input" placeholder="Kategori (misal: Sewa, Gaji, Listrik)">` +
+          `<select id="swal-kategori" class="swal2-input">${optionsHtml}</select>` +
           `<input id="swal-ket" class="swal2-input" placeholder="Keterangan (opsional)">` +
           `<input id="swal-jumlah" type="number" step="0.01" class="swal2-input" placeholder="Jumlah (Rp)">` +
           `<input id="swal-tanggal" type="date" class="swal2-input" value="${new Date().toISOString().slice(0, 10)}">`,
@@ -940,14 +1153,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         confirmButtonText: "Tambah",
         cancelButtonText: "Batal",
         preConfirm: () => {
-          const category = document
-            .getElementById("swal-kategori")
-            .value.trim();
+          const categoryId = document.getElementById("swal-kategori").value;
           const description = document.getElementById("swal-ket").value.trim();
           const amount = document.getElementById("swal-jumlah").value;
           const date = document.getElementById("swal-tanggal").value;
 
-          if (!category || !amount || !date) {
+          if (!categoryId || !amount || !date) {
             Swal.showValidationMessage(
               "Kategori, jumlah, dan tanggal wajib diisi.",
             );
@@ -955,7 +1166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
 
           return {
-            category,
+            category_id: parseInt(categoryId, 10),
             description: description || null,
             amount: parseFloat(amount),
             expense_date: date,
@@ -1001,6 +1212,84 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   };
+
+  // Kelola kategori pengeluaran (tambah/hapus)
+  document
+    .getElementById("kelolaKategoriBtn")
+    .addEventListener("click", async () => {
+      await loadExpenseCategories();
+
+      async function renderDaftarKategori() {
+        const listHtml = daftarKategoriCache
+          .map(
+            (k) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;">
+              <span>${k.name}</span>
+              <button data-hapus-kategori="${k.id}" style="background:none; border:none; color:#dc3545; cursor:pointer;">Hapus</button>
+            </div>
+          `,
+          )
+          .join("");
+
+        const { value: namaBaru } = await Swal.fire({
+          title: "Kelola Kategori Pengeluaran",
+          html:
+            `<div style="text-align:left; max-height:200px; overflow-y:auto; margin-bottom:15px;">${listHtml || '<p style="color:#888;">Belum ada kategori.</p>'}</div>` +
+            `<input id="swal-kategori-baru" class="swal2-input" placeholder="Nama kategori baru">`,
+          showCancelButton: true,
+          confirmButtonText: "Tambah Kategori",
+          cancelButtonText: "Tutup",
+          didOpen: () => {
+            document
+              .querySelectorAll("[data-hapus-kategori]")
+              .forEach((btn) => {
+                btn.addEventListener("click", async () => {
+                  const id = btn.getAttribute("data-hapus-kategori");
+                  const { error } = await supabaseClient
+                    .from("expense_categories")
+                    .delete()
+                    .eq("id", id);
+                  if (error) {
+                    Swal.showValidationMessage(
+                      "Gagal hapus (mungkin masih dipakai di pengeluaran lain): " +
+                        error.message,
+                    );
+                  } else {
+                    await loadExpenseCategories();
+                    Swal.close();
+                    renderDaftarKategori();
+                  }
+                });
+              });
+          },
+          preConfirm: () => {
+            const nama = document
+              .getElementById("swal-kategori-baru")
+              .value.trim();
+            if (!nama) {
+              Swal.showValidationMessage("Isi nama kategori baru.");
+              return false;
+            }
+            return nama;
+          },
+        });
+
+        if (namaBaru) {
+          const { error } = await supabaseClient
+            .from("expense_categories")
+            .insert([{ name: namaBaru }]);
+
+          if (error) {
+            Swal.fire("Gagal!", error.message, "error");
+          } else {
+            await loadExpenseCategories();
+            renderDaftarKategori();
+          }
+        }
+      }
+
+      renderDaftarKategori();
+    });
 
   // 8. Logout Handling
   document
