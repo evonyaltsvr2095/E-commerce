@@ -35,6 +35,19 @@
         >
       </nav>
 
+      <nav>
+        <p class="nav-title">AKUNTANSI</p>
+        <a class="nav-link" href="#" data-tab="bahan"
+          ><i data-feather="box"></i> Bahan Baku</a
+        >
+        <a class="nav-link" href="#" data-tab="resep"
+          ><i data-feather="clipboard"></i> Resep Menu</a
+        >
+        <a class="nav-link" href="#" data-tab="pengeluaran"
+          ><i data-feather="credit-card"></i> Pengeluaran</a
+        >
+      </nav>
+
       <button class="logout" id="logoutButton">
         <i data-feather="log-out"></i> Logout
       </button>
@@ -303,17 +316,12 @@
             </div>
           </div>
 
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-bottom: 10px;
-            "
-          >
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px">
             <!-- Produk terlaris -->
             <div>
-              <h4 style="margin-bottom: 10px; color: #1a1a1a">Menu Terlaris</h4>
+              <h4 style="margin-bottom: 10px; color: #1a1a1a">
+                Menu Terlaris
+              </h4>
               <table
                 style="
                   width: 100%;
@@ -325,23 +333,14 @@
                 "
               >
                 <thead>
-                  <tr
-                    style="
-                      background: #f8f9fa;
-                      border-bottom: 2px solid #eee;
-                      text-align: left;
-                    "
-                  >
+                  <tr style="background: #f8f9fa; border-bottom: 2px solid #eee; text-align: left">
                     <th style="padding: 10px 15px; color: #1a1a1a">Menu</th>
                     <th style="padding: 10px 15px; color: #1a1a1a">Terjual</th>
                   </tr>
                 </thead>
                 <tbody id="lapMenuTerlarisBody">
                   <tr>
-                    <td
-                      colspan="2"
-                      style="text-align: center; padding: 15px; color: #888"
-                    >
+                    <td colspan="2" style="text-align: center; padding: 15px; color: #888">
                       Memuat data...
                     </td>
                   </tr>
@@ -365,26 +364,15 @@
                 "
               >
                 <thead>
-                  <tr
-                    style="
-                      background: #f8f9fa;
-                      border-bottom: 2px solid #eee;
-                      text-align: left;
-                    "
-                  >
+                  <tr style="background: #f8f9fa; border-bottom: 2px solid #eee; text-align: left">
                     <th style="padding: 10px 15px; color: #1a1a1a">Tanggal</th>
-                    <th style="padding: 10px 15px; color: #1a1a1a">
-                      Pendapatan
-                    </th>
+                    <th style="padding: 10px 15px; color: #1a1a1a">Pendapatan</th>
                     <th style="padding: 10px 15px; color: #1a1a1a">Pesanan</th>
                   </tr>
                 </thead>
                 <tbody id="lap7HariBody">
                   <tr>
-                    <td
-                      colspan="3"
-                      style="text-align: center; padding: 15px; color: #888"
-                    >
+                    <td colspan="3" style="text-align: center; padding: 15px; color: #888">
                       Memuat data...
                     </td>
                   </tr>
@@ -409,31 +397,182 @@
               "
             >
               <thead>
-                <tr
-                  style="
-                    background: #f8f9fa;
-                    border-bottom: 2px solid #eee;
-                    text-align: left;
-                  "
-                >
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee; text-align: left">
                   <th style="padding: 10px 15px; color: #1a1a1a">Bulan</th>
-                  <th style="padding: 10px 15px; color: #1a1a1a">
-                    Pendapatan (Sudah Bayar)
-                  </th>
-                  <th style="padding: 10px 15px; color: #1a1a1a">
-                    Jumlah Pesanan
-                  </th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">Pendapatan (Sudah Bayar)</th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">Jumlah Pesanan</th>
                 </tr>
               </thead>
               <tbody id="lapBulananBody">
                 <tr>
-                  <td
-                    colspan="3"
-                    style="text-align: center; padding: 15px; color: #888"
-                  >
+                  <td colspan="3" style="text-align: center; padding: 15px; color: #888">
                     Memuat data...
                   </td>
                 </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Untung / Rugi -->
+          <div style="margin-top: 25px">
+            <h4 style="margin-bottom: 10px; color: #1a1a1a">
+              Ringkasan Untung / Rugi (Semua Waktu)
+            </h4>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 15px;
+              "
+            >
+              <div style="background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 18px">
+                <div style="color: #888; font-size: 0.85rem; margin-bottom: 6px">Pendapatan</div>
+                <div id="urPendapatan" style="font-size: 1.2rem; font-weight: 700; color: #1a1a1a">Rp 0</div>
+              </div>
+              <div style="background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 18px">
+                <div style="color: #888; font-size: 0.85rem; margin-bottom: 6px">HPP (Biaya Bahan)</div>
+                <div id="urHpp" style="font-size: 1.2rem; font-weight: 700; color: #1a1a1a">Rp 0</div>
+              </div>
+              <div style="background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 18px">
+                <div style="color: #888; font-size: 0.85rem; margin-bottom: 6px">Pengeluaran Lain</div>
+                <div id="urPengeluaran" style="font-size: 1.2rem; font-weight: 700; color: #1a1a1a">Rp 0</div>
+              </div>
+              <div style="background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 18px">
+                <div style="color: #888; font-size: 0.85rem; margin-bottom: 6px">Laba / Rugi Bersih</div>
+                <div id="urLabaRugi" style="font-size: 1.2rem; font-weight: 700;">Rp 0</div>
+              </div>
+            </div>
+            <p style="color: #888; font-size: 0.8rem; margin-top: 10px">
+              Catatan: HPP dihitung dari resep menu yang sudah diatur di tab "Resep Menu". Menu yang belum punya resep dianggap HPP = Rp 0.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 5: BAHAN BAKU -->
+      <div id="tab-bahan" class="tab-content" style="display: none">
+        <section class="next-step" style="margin-top: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
+            <div>
+              <h3>Bahan Baku</h3>
+              <p style="color: #666; font-size: 0.9rem">
+                Kelola stok dan harga bahan baku. Stok berkurang otomatis saat ada pesanan masuk.
+              </p>
+            </div>
+            <button
+              id="tambahBahanBtn"
+              style="background:#000; color:#fff; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:600;"
+            >
+              + Tambah Bahan
+            </button>
+          </div>
+
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden">
+              <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee; text-align: left">
+                  <th style="padding: 12px 15px; color: #1a1a1a">Nama Bahan</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Satuan</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Stok</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Harga/Satuan</th>
+                  <th style="padding: 12px 15px; text-align: center; color: #1a1a1a">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="ingredientTableBody">
+                <tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 6: RESEP MENU -->
+      <div id="tab-resep" class="tab-content" style="display: none">
+        <section class="next-step" style="margin-top: 0">
+          <div style="margin-bottom: 20px">
+            <h3>Resep Menu</h3>
+            <p style="color: #666; font-size: 0.9rem">
+              Pilih menu, lalu atur bahan apa saja & berapa banyak dipakai untuk 1 porsi.
+            </p>
+          </div>
+
+          <div style="margin-bottom: 20px; max-width: 320px;">
+            <label style="display:block; margin-bottom:6px; font-weight:600; color:#1a1a1a;">Pilih Menu</label>
+            <select id="resepProductSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+              <option value="">-- Memuat menu... --</option>
+            </select>
+          </div>
+
+          <div id="resepContainer" style="display: none;">
+            <div style="overflow-x: auto; margin-bottom: 15px;">
+              <table style="width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden">
+                <thead>
+                  <tr style="background: #f8f9fa; border-bottom: 2px solid #eee; text-align: left">
+                    <th style="padding: 12px 15px; color: #1a1a1a">Bahan</th>
+                    <th style="padding: 12px 15px; color: #1a1a1a">Jumlah Dipakai</th>
+                    <th style="padding: 12px 15px; color: #1a1a1a">Biaya</th>
+                    <th style="padding: 12px 15px; text-align: center; color: #1a1a1a">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="resepTableBody"></tbody>
+              </table>
+            </div>
+
+            <div style="background:#fff; border:1px solid #eee; border-radius:8px; padding:15px; margin-bottom:15px; max-width: 320px;">
+              <div style="color:#888; font-size:0.85rem;">Total HPP per Porsi</div>
+              <div id="resepTotalHpp" style="font-size:1.3rem; font-weight:700; color:#1a1a1a;">Rp 0</div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:end; flex-wrap: wrap;">
+              <div>
+                <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:#1a1a1a;">Tambah Bahan</label>
+                <select id="resepBahanSelect" style="padding:10px; border-radius:8px; border:1px solid #ddd; min-width:200px;">
+                  <option value="">-- Pilih bahan --</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:#1a1a1a;">Jumlah</label>
+                <input id="resepJumlahInput" type="number" min="0" step="0.01" style="padding:10px; border-radius:8px; border:1px solid #ddd; width:120px;">
+              </div>
+              <button id="resepTambahBtn" style="background:#b6895b; color:#fff; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:600;">
+                Tambah ke Resep
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 7: PENGELUARAN -->
+      <div id="tab-pengeluaran" class="tab-content" style="display: none">
+        <section class="next-step" style="margin-top: 0">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
+            <div>
+              <h3>Pengeluaran Operasional</h3>
+              <p style="color: #666; font-size: 0.9rem">
+                Catat pengeluaran di luar bahan baku: sewa, gaji, listrik, dll.
+              </p>
+            </div>
+            <button
+              id="tambahPengeluaranBtn"
+              style="background:#000; color:#fff; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:600;"
+            >
+              + Tambah Pengeluaran
+            </button>
+          </div>
+
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden">
+              <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee; text-align: left">
+                  <th style="padding: 12px 15px; color: #1a1a1a">Tanggal</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Kategori</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Keterangan</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Jumlah</th>
+                  <th style="padding: 12px 15px; text-align: center; color: #1a1a1a">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="expenseTableBody">
+                <tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Memuat data...</td></tr>
               </tbody>
             </table>
           </div>

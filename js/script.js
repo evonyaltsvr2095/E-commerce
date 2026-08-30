@@ -157,6 +157,9 @@ window.orderHistory = function () {
     // Nomor HP yang dimasukkan pelanggan
     phone: "",
 
+    // Email yang dimasukkan pelanggan
+    email: "",
+
     // Daftar pesanan
     historyItems: [],
 
@@ -179,10 +182,13 @@ window.orderHistory = function () {
       this.searched = false;
 
       // -----------------------------------------------
-      // AMBIL NOMOR
+      // AMBIL NOMOR & EMAIL
       // -----------------------------------------------
 
       const nomor = String(this.phone || "").trim();
+      const emailInput = String(this.email || "")
+        .trim()
+        .toLowerCase();
 
       // -----------------------------------------------
       // VALIDASI
@@ -203,6 +209,13 @@ window.orderHistory = function () {
         return;
       }
 
+      if (!emailInput) {
+        this.errorMessage =
+          "Silakan masukkan email yang dipakai saat checkout.";
+
+        return;
+      }
+
       // -----------------------------------------------
       // LOADING
       // -----------------------------------------------
@@ -211,21 +224,40 @@ window.orderHistory = function () {
 
       try {
         // =============================================
-        // BACA RIWAYAT DARI PENYIMPANAN LOKAL BROWSER
+        // AMBIL RIWAYAT DARI SUPABASE
         // =============================================
         //
-        // Riwayat pesanan disimpan di perangkat/browser
-        // customer sendiri saat checkout berhasil (lihat
-        // simpanHistory()). Ini menghindari kebocoran data
-        // pesanan orang lain, karena tidak ada server yang
-        // bisa diakses hanya bermodal menebak nomor HP.
+        // Dipanggil lewat RPC (fungsi database), bukan
+        // SELECT langsung ke tabel orders. Ini supaya
+        // customer (anon) TIDAK bisa membaca sembarang
+        // pesanan, kecuali nomor HP & email yang dia
+        // masukkan cocok PERSIS dengan punya pesanan itu.
 
-        const semuaHistory =
-          JSON.parse(localStorage.getItem("kopi-history")) || [];
+        const { data, error } = await supabaseClient.rpc(
+          "get_customer_orders",
+          {
+            p_phone: nomorBersih,
+            p_email: emailInput,
+          },
+        );
 
-        const hasil = semuaHistory.filter(function (item) {
-          const phoneBersih = String(item.phone || "").replace(/\D/g, "");
-          return phoneBersih === nomorBersih;
+        if (error) {
+          throw error;
+        }
+
+        const hasil = (data || []).map(function (order) {
+          const daftarItem = Array.isArray(order.items)
+            ? order.items.map((it) => `${it.name} (${it.quantity}x)`).join(", ")
+            : "-";
+
+          return {
+            idOrder: order.id,
+            tanggal: new Date(order.created_at).toLocaleString("id-ID"),
+            pesanan: daftarItem,
+            total: order.total,
+            statusPembayaran: order.payment_status,
+            statusPesanan: order.order_status,
+          };
         });
 
         this.historyItems = hasil;
@@ -233,7 +265,7 @@ window.orderHistory = function () {
 
         if (hasil.length === 0) {
           this.errorMessage =
-            "Tidak ditemukan pesanan dengan nomor WhatsApp tersebut di perangkat ini.";
+            "Tidak ditemukan pesanan dengan nomor WhatsApp dan email tersebut.";
         }
       } catch (error) {
         console.error("Gagal mengambil riwayat:", error);
@@ -332,8 +364,10 @@ async function kirimKeSupabase(dataPesanan) {
     {
       id: orderId,
       customer_name: dataPesanan.nama,
-      customer_email: dataPesanan.email || null,
-      customer_phone: dataPesanan.phone,
+      customer_email: dataPesanan.email
+        ? String(dataPesanan.email).trim().toLowerCase()
+        : null,
+      customer_phone: String(dataPesanan.phone || "").replace(/\D/g, ""),
       items: dataPesanan.items,
       total: dataPesanan.total,
     },
@@ -413,11 +447,11 @@ if (checkoutButton) {
       return;
     }
 
-    if (!nama || !phone) {
+    if (!nama || !phone || !email) {
       Swal.fire({
         icon: "error",
         title: "Data Belum Lengkap",
-        text: "Mohon isi nama dan nomor telepon.",
+        text: "Mohon isi nama, email, dan nomor telepon. Email dibutuhkan supaya Anda bisa cek riwayat pesanan nanti.",
       });
 
       return;
