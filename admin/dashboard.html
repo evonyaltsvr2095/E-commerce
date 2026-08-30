@@ -73,11 +73,8 @@
         <section class="welcome">
           <div>
             <p class="eyebrow">KOPI NGALAM</p>
-            <h2>Selamat Datang di Panel Admin</h2>
-            <p>
-              Kelola menu minuman, harga, dan ketersediaan produk secara
-              langsung dari halaman ini.
-            </p>
+            <h2>Khusus Admin!!!</h2>
+            <p>Gawe ngelola menu ngombe, rego, dan dll.</p>
           </div>
         </section>
 
@@ -119,7 +116,7 @@
           >
             <div>
               <h3>Kelola Menu & Harga</h3>
-              <p style="color: #666; font-size: 0.9rem">
+              <p style="color: #b0b0b0; font-size: 0.9rem">
                 Tambah menu baru atau perbarui harga produk kopi Anda.
               </p>
             </div>
@@ -162,12 +159,20 @@
                     text-align: left;
                   "
                 >
-                  <th style="padding: 12px 15px">Gambar</th>
-                  <th style="padding: 12px 15px">Nama Menu</th>
-                  <th style="padding: 12px 15px">Deskripsi</th>
-                  <th style="padding: 12px 15px">Harga</th>
-                  <th style="padding: 12px 15px">Status</th>
-                  <th style="padding: 12px 15px; text-align: center">Aksi</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Gambar</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Nama Menu</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Deskripsi</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Harga</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Status</th>
+                  <th
+                    style="
+                      padding: 12px 15px;
+                      color: #1a1a1a;
+                      text-align: center;
+                    "
+                  >
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody id="productTableBody">
@@ -190,7 +195,7 @@
         <section class="next-step" style="margin-top: 0">
           <div style="margin-bottom: 20px">
             <h3>Daftar Pesanan</h3>
-            <p style="color: #666; font-size: 0.9rem">
+            <p style="color: #b0b0b0; font-size: 0.9rem">
               Pesanan yang masuk dari website customer akan muncul di sini.
             </p>
           </div>
@@ -215,13 +220,21 @@
                     text-align: left;
                   "
                 >
-                  <th style="padding: 12px 15px">Waktu</th>
-                  <th style="padding: 12px 15px">Pelanggan</th>
-                  <th style="padding: 12px 15px">Pesanan</th>
-                  <th style="padding: 12px 15px">Total</th>
-                  <th style="padding: 12px 15px">Bayar</th>
-                  <th style="padding: 12px 15px">Status</th>
-                  <th style="padding: 12px 15px; text-align: center">Aksi</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Waktu</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Pelanggan</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Pesanan</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Total</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Bayar</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Status</th>
+                  <th
+                    style="
+                      padding: 12px 15px;
+                      color: #1a1a1a;
+                      text-align: center;
+                    "
+                  >
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody id="orderTableBody">
@@ -244,7 +257,7 @@
         <section class="next-step" style="margin-top: 0">
           <div style="margin-bottom: 20px">
             <h3>Laporan Penjualan</h3>
-            <p style="color: #666; font-size: 0.9rem">
+            <p style="color: #b0b0b0; font-size: 0.9rem">
               Ringkasan dari seluruh pesanan yang tercatat.
             </p>
           </div>
@@ -326,7 +339,7 @@
           >
             <!-- Produk terlaris -->
             <div>
-              <h4 style="margin-bottom: 10px; color: #1a1a1a">Menu Terlaris</h4>
+              <h4 style="margin-bottom: 10px; color: #fff">Menu Terlaris</h4>
               <table
                 style="
                   width: 100%;
@@ -364,9 +377,7 @@
 
             <!-- Pendapatan 7 hari terakhir -->
             <div>
-              <h4 style="margin-bottom: 10px; color: #1a1a1a">
-                7 Hari Terakhir
-              </h4>
+              <h4 style="margin-bottom: 10px; color: #fff">7 Hari Terakhir</h4>
               <table
                 style="
                   width: 100%;
@@ -408,7 +419,7 @@
 
           <!-- Rekap Bulanan -->
           <div>
-            <h4 style="margin-bottom: 10px; color: #1a1a1a">
+            <h4 style="margin-bottom: 10px; color: #fff">
               Rekap 6 Bulan Terakhir
             </h4>
             <table
@@ -436,12 +447,23 @@
                   <th style="padding: 10px 15px; color: #1a1a1a">
                     Jumlah Pesanan
                   </th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">
+                    HPP (Biaya Bahan)
+                  </th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">Laba Kotor</th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">
+                    Pengeluaran Lain
+                  </th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">
+                    Laba Bersih
+                  </th>
+                  <th style="padding: 10px 15px; color: #1a1a1a">Margin</th>
                 </tr>
               </thead>
               <tbody id="lapBulananBody">
                 <tr>
                   <td
-                    colspan="3"
+                    colspan="8"
                     style="text-align: center; padding: 15px; color: #888"
                   >
                     Memuat data...
@@ -449,11 +471,15 @@
                 </tr>
               </tbody>
             </table>
+            <p style="color: #b0b0b0; font-size: 0.8rem; margin-top: 8px">
+              Laba Kotor = Pendapatan − HPP. Laba Bersih = Laba Kotor −
+              Pengeluaran Lain bulan tsb. Margin = Laba Bersih ÷ Pendapatan.
+            </p>
           </div>
 
           <!-- Untung / Rugi -->
           <div style="margin-top: 25px">
-            <h4 style="margin-bottom: 10px; color: #1a1a1a">
+            <h4 style="margin-bottom: 10px; color: #fff">
               Ringkasan Untung / Rugi (Semua Waktu)
             </h4>
             <div
@@ -544,7 +570,7 @@
                 </div>
               </div>
             </div>
-            <p style="color: #888; font-size: 0.8rem; margin-top: 10px">
+            <p style="color: #b0b0b0; font-size: 0.8rem; margin-top: 10px">
               Catatan: HPP dihitung dari resep menu yang sudah diatur di tab
               "Resep Menu". Menu yang belum punya resep dianggap HPP = Rp 0.
             </p>
@@ -565,7 +591,7 @@
           >
             <div>
               <h3>Bahan Baku</h3>
-              <p style="color: #666; font-size: 0.9rem">
+              <p style="color: #b0b0b0; font-size: 0.9rem">
                 Stok & harga dicatat per satuan besar (kg/L/pcs). Resep pakai
                 satuan kecil (gram/ml) yang otomatis dikonversi. Stok berkurang
                 otomatis saat ada pesanan masuk.
@@ -644,7 +670,7 @@
 
           <!-- Riwayat Pembelian -->
           <div style="margin-top: 30px">
-            <h4 style="margin-bottom: 10px; color: #1a1a1a">
+            <h4 style="margin-bottom: 10px; color: #fff">
               Riwayat Pembelian Bahan
             </h4>
             <div style="overflow-x: auto">
@@ -700,7 +726,7 @@
         <section class="next-step" style="margin-top: 0">
           <div style="margin-bottom: 20px">
             <h3>Resep Menu</h3>
-            <p style="color: #666; font-size: 0.9rem">
+            <p style="color: #b0b0b0; font-size: 0.9rem">
               Pilih menu, lalu atur bahan apa saja & berapa banyak dipakai untuk
               1 porsi.
             </p>
@@ -712,7 +738,7 @@
                 display: block;
                 margin-bottom: 6px;
                 font-weight: 600;
-                color: #1a1a1a;
+                color: #fff;
               "
               >Pilih Menu</label
             >
@@ -876,7 +902,7 @@
           >
             <div>
               <h3>Pengeluaran Operasional</h3>
-              <p style="color: #666; font-size: 0.9rem">
+              <p style="color: #b0b0b0; font-size: 0.9rem">
                 Catat pengeluaran di luar bahan baku: sewa, gaji, listrik, dll.
               </p>
             </div>

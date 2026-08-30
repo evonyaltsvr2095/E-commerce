@@ -258,6 +258,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     elTotalPesanan.textContent = orders.length;
     elBelumBayar.textContent = totalBelumBayar;
 
+    // ---------- Data untuk HPP & Pengeluaran (dipakai di Bulanan & Untung/Rugi) ----------
+    // Skema baru: recipes (product_id) -> recipe_items (ingredient_id, quantity_used)
+    // Biaya per satuan resep = cost_per_unit (harga per satuan besar) / conversion_factor
+    const { data: resepData, error: resepError } = await supabaseClient
+      .from("recipe_items")
+      .select(
+        "quantity_used, recipes(product_id), ingredients(cost_per_unit, conversion_factor)",
+      );
+
+    const hppPerProduk = {};
+    if (!resepError && resepData) {
+      resepData.forEach((r) => {
+        const productId = r.recipes?.product_id;
+        if (!productId) return;
+        const biayaPerSatuanResep =
+          Number(r.ingredients?.cost_per_unit || 0) /
+          Number(r.ingredients?.conversion_factor || 1);
+        const biaya = Number(r.quantity_used) * biayaPerSatuanResep;
+        hppPerProduk[productId] = (hppPerProduk[productId] || 0) + biaya;
+      });
+    } else if (resepError) {
+      console.error("Gagal memuat resep untuk HPP:", resepError);
+    }
+
+    function hitungHppPesanan(order) {
+      if (!Array.isArray(order.items)) return 0;
+      return order.items.reduce((sum, it) => {
+        const hppSatuan = hppPerProduk[it.product_id] || 0;
+        return sum + hppSatuan * (Number(it.quantity) || 0);
+      }, 0);
+    }
+
+    const { data: expenseData, error: expenseError } = await supabaseClient
+      .from("expenses")
+      .select("amount, expense_date");
+
+    if (expenseError) {
+      console.error("Gagal memuat pengeluaran:", expenseError);
+    }
+
     // ---------- Menu Terlaris ----------
     const jumlahPerMenu = {};
 
@@ -347,6 +387,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }),
         pendapatan: 0,
         jumlahPesanan: 0,
+        hpp: 0,
+        pengeluaran: 0,
       });
     }
 
@@ -358,20 +400,42 @@ document.addEventListener("DOMContentLoaded", async () => {
         baris.jumlahPesanan += 1;
         if (order.payment_status === "Sudah Bayar") {
           baris.pendapatan += Number(order.total) || 0;
+          baris.hpp += hitungHppPesanan(order);
         }
       }
     });
 
+    if (!expenseError && expenseData) {
+      expenseData.forEach((exp) => {
+        if (!exp.expense_date) return;
+        const tglExp = new Date(exp.expense_date);
+        const kunciExp = `${tglExp.getFullYear()}-${String(tglExp.getMonth() + 1).padStart(2, "0")}`;
+        const baris = rekapBulanan.find((r) => r.kunci === kunciExp);
+        if (baris) {
+          baris.pengeluaran += Number(exp.amount) || 0;
+        }
+      });
+    }
+
     elBulanan.innerHTML = rekapBulanan
-      .map(
-        (r) => `
+      .map((r) => {
+        const labaKotor = r.pendapatan - r.hpp;
+        const labaBersih = labaKotor - r.pengeluaran;
+        const margin = r.pendapatan > 0 ? (labaBersih / r.pendapatan) * 100 : 0;
+        const warnaLaba = labaBersih >= 0 ? "#1e7e34" : "#d93025";
+        return `
         <tr style="border-bottom: 1px solid #eee;">
           <td style="padding: 10px 15px; color: #1a1a1a;">${r.label}</td>
           <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${r.pendapatan.toLocaleString("id-ID")}</td>
           <td style="padding: 10px 15px; color: #1a1a1a;">${r.jumlahPesanan}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${r.hpp.toLocaleString("id-ID", { maximumFractionDigits: 0 })}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${labaKotor.toLocaleString("id-ID", { maximumFractionDigits: 0 })}</td>
+          <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${r.pengeluaran.toLocaleString("id-ID")}</td>
+          <td style="padding: 10px 15px; color: ${warnaLaba}; font-weight: 600;">Rp ${labaBersih.toLocaleString("id-ID", { maximumFractionDigits: 0 })}</td>
+          <td style="padding: 10px 15px; color: ${warnaLaba};">${margin.toFixed(1)}%</td>
         </tr>
-      `,
-      )
+      `;
+      })
       .join("");
 
     // ---------- Untung / Rugi ----------
@@ -380,36 +444,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const elUrPengeluaran = document.getElementById("urPengeluaran");
     const elUrLabaRugi = document.getElementById("urLabaRugi");
 
-    // Ambil resep semua menu (untuk hitung HPP per menu)
-    const { data: resepData, error: resepError } = await supabaseClient
-      .from("product_ingredients")
-      .select("product_id, quantity_used, ingredients(cost_per_unit)");
-
-    const hppPerProduk = {};
-    if (!resepError && resepData) {
-      resepData.forEach((r) => {
-        const biaya =
-          Number(r.quantity_used) * Number(r.ingredients?.cost_per_unit || 0);
-        hppPerProduk[r.product_id] = (hppPerProduk[r.product_id] || 0) + biaya;
-      });
-    }
-
     // Hitung total HPP dari semua pesanan yang SUDAH BAYAR
+    // (pakai hppPerProduk yang sudah diambil di atas)
     let totalHppTerpakai = 0;
     orders.forEach((order) => {
       if (order.payment_status !== "Sudah Bayar") return;
-      if (!Array.isArray(order.items)) return;
-      order.items.forEach((it) => {
-        const hppSatuan = hppPerProduk[it.product_id] || 0;
-        totalHppTerpakai += hppSatuan * (Number(it.quantity) || 0);
-      });
+      totalHppTerpakai += hitungHppPesanan(order);
     });
 
-    // Ambil total pengeluaran operasional lain
-    const { data: expenseData, error: expenseError } = await supabaseClient
-      .from("expenses")
-      .select("amount");
-
+    // Total pengeluaran operasional lain (pakai expenseData yang sudah diambil di atas)
     const totalPengeluaranLain =
       !expenseError && expenseData
         ? expenseData.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
