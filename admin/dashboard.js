@@ -21,6 +21,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   const tabContents = document.querySelectorAll(".tab-content");
   const pageTitle = document.getElementById("pageTitle");
 
+  // 3a. Toggle sidebar di layar kecil (tombol hamburger)
+  const sidebar = document.getElementById("sidebar");
+  const menuButton = document.getElementById("menuButton");
+
+  if (menuButton && sidebar) {
+    menuButton.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle("open");
+    });
+
+    // Tutup sidebar kalau area luar sidebar disentuh (mobile)
+    document.addEventListener("click", (e) => {
+      if (
+        sidebar.classList.contains("open") &&
+        !sidebar.contains(e.target) &&
+        e.target !== menuButton
+      ) {
+        sidebar.classList.remove("open");
+      }
+    });
+  }
+
   navLinks.forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -28,6 +50,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       navLinks.forEach((l) => l.classList.remove("active"));
       link.classList.add("active");
+
+      // Tutup sidebar otomatis setelah pilih menu (mobile)
+      if (sidebar) sidebar.classList.remove("open");
 
       tabContents.forEach((content) => {
         content.style.display =
