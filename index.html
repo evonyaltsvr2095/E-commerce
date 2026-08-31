@@ -162,16 +162,8 @@
       <div class="row">
         <template x-for="(item, index) in items" :key="index">
           <div class="product-card">
-            <div class="product-icons">
-  <a href="#" @click.prevent="$store.cart.add(item)">
-    <i data-feather="shopping-cart"></i>
-  </a>
-  <a href="#" class="item-detail-button" @click.prevent="changeItem(item)">
-                <i data-feather="eye"></i>
-</a>
-</div>
             <div class="product-image">
-              <img :src="`img/products/${item.img}`" alt="item.name" />
+              <img :src="`img/products/${activeVariant(item).img}`" alt="item.name" />
             </div>
             <div class="product-content">
               <h3 x-text="item.name"></h3>
@@ -182,13 +174,51 @@
                 <i data-feather="star" class="star-full"></i>
                 <i data-feather="star"></i>
               </div>
-              <div class="product-price" x-text="rupiah(item.price)"></div>
+              <div class="product-price" x-text="rupiah(activeVariant(item).price)"></div>
+              <div class="product-icons">
+  <a href="#" @click.prevent="$store.cart.add(activeVariant(item))">
+    <i data-feather="shopping-cart"></i>
+  </a>
+  <a href="#" class="item-detail-button" @click.prevent="changeItem(item)">
+                <i data-feather="eye"></i>
+</a>
+</div>
+              <div class="product-variants" x-show="item.variants" style="display:flex; gap:8px; margin-top:8px; justify-content:center; flex-wrap:wrap;">
+                <template x-for="variant in item.variants" :key="variant.id">
+                  <button
+                    type="button"
+                    @click="selectVariant(item, variant)"
+                    :class="{ active: (item.selectedVariantId || item.variants[0].id) === variant.id }"
+                    class="variant-btn"
+                    x-text="variant.label"
+                  ></button>
+                </template>
+              </div>
             </div>
           </div>
         </template>
       </div>
     </section>
     <!-- Products Section end -->
+
+    <style>
+      .variant-btn {
+        padding: 6px 16px;
+        border-radius: 999px;
+        border: 1px solid #ccc;
+        background: #fff;
+        color: #333;
+        font-size: 1.3rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .variant-btn.active {
+        background: #000;
+        color: #fff;
+        border-color: #000;
+      }
+    </style>
 
     <!-- Contact Section Start -->
     <section id="contact" class="contact">
@@ -265,11 +295,11 @@
     </a>
     
     <div class="modal-content">
-      <img :src="`img/products/${currentItem.img}`" :alt="currentItem.name" />
+      <img :src="`img/products/${activeVariant(currentItem).img}`" :alt="currentItem.name" />
       
       <div class="product-content">
         <h3 x-text="currentItem.name"></h3>
-        <p x-text="currentItem.desc"></p>
+        <p x-text="activeVariant(currentItem).desc"></p>
         
         <div class="product-stars">
           <i data-feather="star" class="star-full"></i>
@@ -278,12 +308,24 @@
           <i data-feather="star" class="star-full"></i>
           <i data-feather="star"></i>
         </div>
-        
+
         <div class="product-price">
-          <span x-text="rupiah(currentItem.price)"></span>
+          <span x-text="rupiah(activeVariant(currentItem).price)"></span>
+        </div>
+
+        <div class="product-variants" x-show="currentItem.variants" style="display:flex; gap:8px; margin:10px 0; justify-content:center; flex-wrap:wrap;">
+          <template x-for="variant in currentItem.variants" :key="variant.id">
+            <button
+              type="button"
+              @click="selectVariant(currentItem, variant)"
+              :class="{ active: (currentItem.selectedVariantId || (currentItem.variants && currentItem.variants[0].id)) === variant.id }"
+              class="variant-btn"
+              x-text="variant.label"
+            ></button>
+          </template>
         </div>
         
-        <a href="#" @click.prevent="$store.cart.add(currentItem)">
+        <a href="#" @click.prevent="$store.cart.add(activeVariant(currentItem))">
           <i data-feather="shopping-cart"></i> <span>add to cart</span>
         </a>
       </div>

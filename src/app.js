@@ -30,16 +30,78 @@ document.addEventListener("alpine:init", () => {
 
       // Samakan nama kolom dari database (image, description)
       // dengan nama field yang dipakai template (img, desc)
-      this.items = data.map((item) => ({
+      const mapped = data.map((item) => ({
         id: item.id,
         name: item.name,
         img: item.image,
         price: item.price,
         desc: item.description,
+        variantGroup: item.variant_group || null,
+        variantLabel: item.variant_label || null,
       }));
+
+      // Kelompokkan menu yang punya variant_group yang sama
+      // (mis. "Kopi Tubruk" Hot & Ice) jadi satu kartu dengan
+      // beberapa pilihan varian. Menu tanpa variant_group tetap
+      // tampil seperti biasa (satu kartu, satu pilihan).
+      const groups = [];
+      const groupIndexByKey = {};
+
+      mapped.forEach((item) => {
+        if (!item.variantGroup) {
+          groups.push({
+            id: item.id,
+            name: item.name,
+            img: item.img,
+            desc: item.desc,
+            price: item.price,
+            variants: null, // tanpa varian
+            // properti ini dipakai saat langsung add-to-cart (tanpa pilih varian)
+          });
+          return;
+        }
+
+        if (groupIndexByKey[item.variantGroup] === undefined) {
+          groupIndexByKey[item.variantGroup] = groups.length;
+          groups.push({
+            id: item.id, // default: varian pertama
+            name: item.name,
+            img: item.img,
+            desc: item.desc,
+            price: item.price,
+            variants: [],
+          });
+        }
+
+        const g = groups[groupIndexByKey[item.variantGroup]];
+        g.variants.push({
+          id: item.id,
+          label: item.variantLabel,
+          price: item.price,
+          name: `${item.name} (${item.variantLabel})`,
+          img: item.img,
+          desc: item.desc,
+        });
+      });
+
+      this.items = groups;
 
       this.loading = false;
       this.$nextTick(() => feather.replace());
+    },
+
+    // Menu dengan varian: yang aktif dipilih di kartu / modal
+    selectVariant(item, variant) {
+      item.selectedVariantId = variant.id;
+    },
+
+    // Ambil data produk sesuai varian yang sedang dipilih (atau produk itu sendiri kalau tanpa varian)
+    activeVariant(item) {
+      if (!item.variants) return item;
+      const chosen =
+        item.variants.find((v) => v.id === item.selectedVariantId) ||
+        item.variants[0];
+      return { ...chosen };
     },
 
     showDetail(item) {

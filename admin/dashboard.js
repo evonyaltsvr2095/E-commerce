@@ -124,7 +124,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td style="padding: 12px 15px;">
           <img src="../img/products/${item.image || "default.jpg"}" alt="${item.name}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;" onerror="this.src='https://via.placeholder.com/45'">
         </td>
-        <td style="padding: 12px 15px; font-weight: 600; color: #1a1a1a;">${item.name}</td>
+        <td style="padding: 12px 15px; font-weight: 600; color: #1a1a1a;">${item.name}${
+          item.variant_label
+            ? ` <span style="font-weight:500; font-size:0.75rem; padding:2px 6px; border-radius:4px; background:#eef2ff; color:#3b4ed6;">${item.variant_label}</span>`
+            : ""
+        }</td>
         <td style="padding: 12px 15px; color: #666; font-size: 0.85rem; max-width: 200px;">${item.description || "-"}</td>
         <td style="padding: 12px 15px; font-weight: 500; color: #1a1a1a;">Rp ${Number(item.price).toLocaleString("id-ID")}</td>
         <td style="padding: 12px 15px;">
@@ -133,7 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </span>
         </td>
         <td style="padding: 12px 15px; text-align: center;">
-          <button onclick="editProduct(${item.id}, '${item.name}', '${item.description || ""}', ${item.price}, ${item.is_active})" style="background: none; border: none; cursor: pointer; color: #007bff; margin-right: 8px;" title="Edit">
+          <button onclick="editProduct(${item.id}, '${item.name}', '${item.description || ""}', ${item.price}, ${item.is_active}, ${item.variant_group ? `'${item.variant_group}'` : "null"}, ${item.variant_label ? `'${item.variant_label}'` : "null"})" style="background: none; border: none; cursor: pointer; color: #007bff; margin-right: 8px;" title="Edit">
             <i data-feather="edit-2"></i>
           </button>
           <button onclick="deleteProduct(${item.id}, '${item.name}')" style="background: none; border: none; cursor: pointer; color: #dc3545;" title="Hapus">
@@ -528,10 +532,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const { value: formValues } = await Swal.fire({
         title: "Tambah Menu Baru",
         html:
-          '<input id="swal-name" class="swal2-input" placeholder="Nama Menu (misal: V60)">' +
+          '<input id="swal-name" class="swal2-input" placeholder="Nama Menu (misal: Kopi Tubruk)">' +
           '<input id="swal-desc" class="swal2-input" placeholder="Deskripsi Singkat">' +
           '<input id="swal-price" type="number" class="swal2-input" placeholder="Harga (misal: 18000)">' +
-          '<input id="swal-image" class="swal2-input" placeholder="Nama file di folder img/products/ (misal: v60.jpg)">',
+          '<input id="swal-image" class="swal2-input" placeholder="Nama file di folder img/products/ (misal: v60.jpg)">' +
+          '<hr style="margin:14px 0 8px;">' +
+          '<p style="text-align:left; font-size:0.78rem; color:#888; margin:0 0 8px;">Opsional: isi 2 kolom di bawah kalau menu ini punya varian (misal Hot/Ice). Menu dengan Grup Varian yang SAMA akan tampil jadi satu kartu dengan tombol pilihan di site customer.</p>' +
+          '<input id="swal-variant-group" class="swal2-input" placeholder="Grup Varian (misal: kopi-tubruk) - kosongkan jika tanpa varian">' +
+          '<input id="swal-variant-label" class="swal2-input" placeholder="Label Varian (misal: Hot / Ice)">',
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: "Simpan",
@@ -541,12 +549,34 @@ document.addEventListener("DOMContentLoaded", async () => {
           const description = document.getElementById("swal-desc").value;
           const price = document.getElementById("swal-price").value;
           const image = document.getElementById("swal-image").value;
+          const variantGroup = document
+            .getElementById("swal-variant-group")
+            .value.trim();
+          const variantLabel = document
+            .getElementById("swal-variant-label")
+            .value.trim();
 
           if (!name || !price) {
             Swal.showValidationMessage("Nama menu dan harga wajib diisi!");
             return false;
           }
-          return { name, description, price: parseFloat(price), image };
+          if (
+            (variantGroup && !variantLabel) ||
+            (!variantGroup && variantLabel)
+          ) {
+            Swal.showValidationMessage(
+              "Grup Varian dan Label Varian harus diisi berdua, atau dikosongkan berdua.",
+            );
+            return false;
+          }
+          return {
+            name,
+            description,
+            price: parseFloat(price),
+            image,
+            variant_group: variantGroup || null,
+            variant_label: variantLabel || null,
+          };
         },
       });
 
@@ -564,7 +594,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
   // 6. Global Function: Edit Produk
-  window.editProduct = async (id, name, description, price, isActive) => {
+  window.editProduct = async (
+    id,
+    name,
+    description,
+    price,
+    isActive,
+    variantGroup,
+    variantLabel,
+  ) => {
     const { value: formValues } = await Swal.fire({
       title: "Edit Menu & Harga",
       html:
@@ -578,18 +616,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         `<select id="swal-edit-status" class="swal2-input">` +
         `<option value="true" ${isActive ? "selected" : ""}>Tersedia</option>` +
         `<option value="false" ${!isActive ? "selected" : ""}>Nonaktif / Habis</option>` +
-        `</select>`,
+        `</select>` +
+        `<hr style="margin:14px 0 8px;">` +
+        `<p style="text-align:left; font-size:0.78rem; color:#888; margin:0 0 8px;">Opsional: isi kalau menu ini punya varian (misal Hot/Ice). Menu dengan Grup Varian yang SAMA tampil jadi satu kartu di site customer.</p>` +
+        `<label style="display:block; text-align:left; font-size:0.8rem; margin-top:6px;">Grup Varian:</label>` +
+        `<input id="swal-edit-variant-group" class="swal2-input" placeholder="misal: kopi-tubruk" value="${variantGroup || ""}">` +
+        `<label style="display:block; text-align:left; font-size:0.8rem; margin-top:10px;">Label Varian:</label>` +
+        `<input id="swal-edit-variant-label" class="swal2-input" placeholder="misal: Hot / Ice" value="${variantLabel || ""}">`,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: "Perbarui",
       cancelButtonText: "Batal",
       preConfirm: () => {
+        const variantGroupVal = document
+          .getElementById("swal-edit-variant-group")
+          .value.trim();
+        const variantLabelVal = document
+          .getElementById("swal-edit-variant-label")
+          .value.trim();
+
+        if (
+          (variantGroupVal && !variantLabelVal) ||
+          (!variantGroupVal && variantLabelVal)
+        ) {
+          Swal.showValidationMessage(
+            "Grup Varian dan Label Varian harus diisi berdua, atau dikosongkan berdua.",
+          );
+          return false;
+        }
+
         return {
           name: document.getElementById("swal-edit-name").value,
           description: document.getElementById("swal-edit-desc").value,
           price: parseFloat(document.getElementById("swal-edit-price").value),
           is_active:
             document.getElementById("swal-edit-status").value === "true",
+          variant_group: variantGroupVal || null,
+          variant_label: variantLabelVal || null,
         };
       },
     });

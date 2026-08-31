@@ -368,7 +368,7 @@ body {
   text-align: center;
   max-width: 30rem;
   margin: auto;
-  font-weight: 100;
+  font-weight: 500;
   line-height: 1.6;
 }
 
@@ -411,6 +411,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .products .product-icons a {
