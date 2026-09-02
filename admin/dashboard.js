@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     : "Dashboard";
 
       if (targetTab === "pesanan") {
+        resetBadgePesanan();
         loadOrders();
       }
 
@@ -95,6 +96,82 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
   });
+
+  // 3b. Notifikasi Pesanan Baru (Real-time)
+  const pesananBadge = document.getElementById("pesananBadge");
+  let jumlahPesananBaru = 0;
+
+  function bunyikanNotifikasi() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [880, 1175].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.16);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          ctx.currentTime + i * 0.16 + 0.35,
+        );
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.16);
+        osc.stop(ctx.currentTime + i * 0.16 + 0.35);
+      });
+    } catch (e) {
+      console.warn("Tidak bisa memutar suara notifikasi:", e);
+    }
+  }
+
+  function tampilkanBadgePesanan() {
+    if (!pesananBadge) return;
+    jumlahPesananBaru += 1;
+    pesananBadge.innerText = jumlahPesananBaru;
+    pesananBadge.style.display = "inline-block";
+  }
+
+  function resetBadgePesanan() {
+    jumlahPesananBaru = 0;
+    if (pesananBadge) pesananBadge.style.display = "none";
+  }
+
+  supabaseClient
+    .channel("admin-orders-realtime")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "orders" },
+      (payload) => {
+        bunyikanNotifikasi();
+
+        const tabPesananAktif =
+          document.getElementById("tab-pesanan")?.style.display === "block";
+
+        if (tabPesananAktif) {
+          resetBadgePesanan();
+          loadOrders();
+        } else {
+          tampilkanBadgePesanan();
+        }
+
+        if (window.Swal) {
+          const namaPembeli = payload.new?.customer_name || "Pelanggan";
+          const totalPesanan = payload.new?.total
+            ? "Rp " + Number(payload.new.total).toLocaleString("id-ID")
+            : "";
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "info",
+            title: "Pesanan baru masuk!",
+            text: `${namaPembeli} \u2014 ${totalPesanan}`,
+            showConfirmButton: false,
+            timer: 4500,
+            timerProgressBar: true,
+          });
+        }
+      },
+    )
+    .subscribe();
 
   // 4. Load Data Produk dari Supabase
   async function loadProducts() {
