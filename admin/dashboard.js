@@ -1094,12 +1094,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       .limit(20);
 
     if (error) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red; padding:20px;">Gagal memuat riwayat.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; padding:20px;">Gagal memuat riwayat.</td></tr>`;
       return;
     }
 
     if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">Belum ada pembelian tercatat.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#888;">Belum ada pembelian tercatat.</td></tr>`;
       return;
     }
 
@@ -1117,11 +1117,49 @@ document.addEventListener("DOMContentLoaded", async () => {
           <td style="padding: 10px 15px; color: #1a1a1a;">${p.quantity} ${p.ingredients?.unit || ""}</td>
           <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${Number(p.total_price).toLocaleString("id-ID")}</td>
           <td style="padding: 10px 15px; color: #1a1a1a;">Rp ${Number(p.unit_price).toLocaleString("id-ID")}/${p.ingredients?.unit || ""}</td>
+          <td style="padding: 10px 15px; text-align: center;">
+            <button onclick="deletePurchase(${p.id}, '${String(p.ingredients?.name || "").replace(/'/g, "\\'")}', ${p.quantity}, '${p.ingredients?.unit || ""}')" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus">
+              <i data-feather="trash-2"></i>
+            </button>
+          </td>
         </tr>
       `;
       })
       .join("");
+
+    feather.replace();
   }
+
+  window.deletePurchase = async (id, namaBahan, qty, satuan) => {
+    const result = await Swal.fire({
+      title: "Hapus Riwayat Pembelian?",
+      html: `Pembelian <b>${namaBahan}</b> sebanyak <b>${qty} ${satuan}</b> akan dihapus.<br><br>
+             Stok bahan ini akan otomatis <b>dikurangi kembali</b> sebesar itu juga.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      confirmButtonText: "Ya, Hapus",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
+
+    const { error } = await supabaseClient
+      .from("ingredient_purchases")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      Swal.fire("Gagal!", error.message, "error");
+    } else {
+      Swal.fire(
+        "Terhapus!",
+        "Riwayat pembelian sudah dihapus, stok disesuaikan.",
+        "success",
+      );
+      loadIngredients(); // reload bahan (stok) + riwayat pembelian sekaligus
+    }
+  };
 
   async function bukaFormBahan(existing) {
     const { value: formValues } = await Swal.fire({
