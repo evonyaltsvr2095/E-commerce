@@ -280,6 +280,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; ${sudahBayar ? "background:#e6f4ea; color:#1e7e34;" : "background:#fbeae8; color:#d93025;"}">
               ${order.payment_status}
             </span>
+            ${order.payment_method ? `<div style="font-size:0.75rem; color:#666; margin-top:3px;">via ${order.payment_method}</div>` : ""}
           </td>
           <td style="padding: 12px 15px;">
             <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:4px 6px; border-radius:4px; border:1px solid #ddd; color: #1a1a1a;">
@@ -321,15 +322,38 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Global Function: Tandai sudah/belum bayar
   window.togglePaymentStatus = async (id, isCurrentlyPaid) => {
-    const newStatus = isCurrentlyPaid ? "Belum Bayar" : "Sudah Bayar";
+    const newPaymentStatus = isCurrentlyPaid ? "Belum Bayar" : "Sudah Bayar";
+
     const { error } = await supabaseClient
       .from("orders")
-      .update({ payment_status: newStatus })
+      .update({ payment_status: newPaymentStatus })
       .eq("id", id);
 
     if (error) {
       Swal.fire("Gagal!", error.message, "error");
+      loadOrders();
+      return;
     }
+
+    // Begitu pembayaran dikonfirmasi (Belum Bayar -> Sudah Bayar),
+    // status pesanan otomatis ikut maju dari "Pesanan Baru" ke
+    // "Diproses" -- tapi HANYA kalau statusnya masih "Pesanan Baru"
+    // (tidak menimpa "Selesai" atau "Dibatalkan").
+    if (newPaymentStatus === "Sudah Bayar") {
+      const { data: orderSaatIni } = await supabaseClient
+        .from("orders")
+        .select("order_status")
+        .eq("id", id)
+        .single();
+
+      if (orderSaatIni?.order_status === "Pesanan Baru") {
+        await supabaseClient
+          .from("orders")
+          .update({ order_status: "Diproses" })
+          .eq("id", id);
+      }
+    }
+
     loadOrders();
   };
 
