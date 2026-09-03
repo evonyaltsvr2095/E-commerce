@@ -733,6 +733,7 @@ if (checkoutButton) {
         name: item.name,
         price: item.price,
         quantity: item.quantity,
+        notes: item.notes || "",
       };
     });
 
@@ -805,7 +806,11 @@ if (checkoutButton) {
       }
 
       cartItems.forEach(function (item) {
-        pesan += `- ${item.name} (${item.quantity} x ${rupiah(item.price)})\n`;
+        pesan += `- ${item.name} (${item.quantity} x ${rupiah(item.price)})`;
+        if (item.notes && item.notes.trim()) {
+          pesan += `\n  Catatan: ${item.notes.trim()}`;
+        }
+        pesan += "\n";
       });
 
       pesan += `\n*Total: ${rupiah(total)}*`;

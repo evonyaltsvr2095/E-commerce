@@ -263,7 +263,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       .map((order) => {
         const waktu = new Date(order.created_at).toLocaleString("id-ID");
         const daftarItem = Array.isArray(order.items)
-          ? order.items.map((it) => `${it.name} (${it.quantity}x)`).join(", ")
+          ? order.items
+              .map((it) => {
+                const catatan =
+                  it.notes && it.notes.trim()
+                    ? ` <span style="color:#b6895b; font-style:italic;">— ${it.notes.trim()}</span>`
+                    : "";
+                return `${it.name} (${it.quantity}x)${catatan}`;
+              })
+              .join("<br>")
           : "-";
         const sudahBayar = order.payment_status === "Sudah Bayar";
 
@@ -293,6 +301,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           <td style="padding: 12px 15px; text-align: center;">
             <button onclick="togglePaymentStatus('${order.id}', ${sudahBayar})" style="background:none; border:none; cursor:pointer; color:#007bff; margin-right:8px;" title="Tandai ${sudahBayar ? "Belum Bayar" : "Sudah Bayar"}">
               <i data-feather="${sudahBayar ? "x-circle" : "check-circle"}"></i>
+            </button>
+            <button onclick="cetakStruk('${order.id}')" style="background:none; border:none; cursor:pointer; color:#1a1a1a; margin-right:8px;" title="Struk / Invoice">
+              <i data-feather="printer"></i>
             </button>
             <button onclick="deleteOrder('${order.id}')" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus">
               <i data-feather="trash-2"></i>
@@ -645,6 +656,162 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
   window.loadLaporan = loadLaporan;
+
+  // Global Function: Cetak Struk
+  window.cetakStruk = async (id) => {
+    const { data: order, error } = await supabaseClient
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !order) {
+      Swal.fire("Gagal!", "Data pesanan tidak ditemukan.", "error");
+      return;
+    }
+
+    const items = Array.isArray(order.items) ? order.items : [];
+    const waktu = new Date(order.created_at).toLocaleString("id-ID", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    const rp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
+
+    const baris = items
+      .map((it) => {
+        const subtotal = Number(it.price) * Number(it.quantity);
+        const catatan =
+          it.notes && it.notes.trim()
+            ? `<div class="catatan">Catatan: ${it.notes.trim()}</div>`
+            : "";
+        return `
+          <div class="item-row">
+            <div class="item-nama">${it.name}</div>
+            ${catatan}
+            <div class="item-detail">
+              <span>${it.quantity} x ${rp(it.price)}</span>
+              <span>${rp(subtotal)}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+      <meta charset="UTF-8">
+      <title>Struk - ${order.id}</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+      <style>
+        @page {
+          size: 80mm auto;
+          margin: 0;
+        }
+        * { box-sizing: border-box; }
+        body {
+          font-family: 'Courier New', monospace;
+          margin: 0 auto;
+          padding: 20px 0;
+          color: #111;
+          font-size: 12px;
+          background: #ddd;
+        }
+        #struk-content {
+          width: 72mm;
+          margin: 0 auto;
+          padding: 3mm 4mm;
+          background: #fff;
+        }
+        .center { text-align: center; }
+        h1 { font-size: 16px; margin: 0 0 2px; }
+        .sub { font-size: 11px; color: #444; margin-bottom: 10px; }
+        hr { border: none; border-top: 1px dashed #333; margin: 10px 0; }
+        .info-row { display: flex; justify-content: space-between; margin: 2px 0; }
+        .item-row { margin: 8px 0; }
+        .item-nama { font-weight: bold; }
+        .catatan { font-size: 11px; font-style: italic; color: #444; margin: 2px 0 0 6px; }
+        .item-detail { display: flex; justify-content: space-between; margin-top: 2px; }
+        .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 6px; }
+        .footer { text-align: center; font-size: 11px; margin-top: 14px; color: #444; }
+        .aksi { text-align: center; margin-top: 16px; }
+        .aksi button {
+          padding: 10px 18px;
+          margin: 0 4px;
+          cursor: pointer;
+          border-radius: 6px;
+          border: none;
+          font-size: 13px;
+          font-weight: 600;
+        }
+        #btnDownload { background: #b6895b; color: #fff; }
+        #btnPrint { background: #fff; color: #333; border: 1px solid #ccc !important; }
+        @media print {
+          .no-print { display: none; }
+          body { background: #fff; padding: 0; }
+          #struk-content { width: 72mm; }
+        }
+      </style>
+      </head>
+      <body>
+        <div id="struk-content">
+          <div class="center">
+            <h1>KOPI NGALAM</h1>
+            <div class="sub">Struk Pesanan</div>
+          </div>
+          <hr>
+          <div class="info-row"><span>No. Order</span><span>${order.id.slice(0, 8)}</span></div>
+          <div class="info-row"><span>Tanggal</span><span>${waktu}</span></div>
+          <div class="info-row"><span>Pelanggan</span><span>${order.customer_name || "-"}</span></div>
+          <div class="info-row"><span>No. HP</span><span>${order.customer_phone || "-"}</span></div>
+          <hr>
+          ${baris}
+          <hr>
+          <div class="total-row"><span>TOTAL</span><span>${rp(order.total)}</span></div>
+          <div class="info-row" style="margin-top:6px;"><span>Metode Bayar</span><span>${order.payment_method || "-"}</span></div>
+          <div class="info-row"><span>Status Bayar</span><span>${order.payment_status}</span></div>
+          <hr>
+          <div class="footer">
+            Terima kasih sudah ngopi di Kopi Ngalam!<br>
+            Sampai jumpa lagi ☕
+          </div>
+        </div>
+        <div class="no-print aksi">
+          <button id="btnDownload">⬇ Download Gambar (PNG)</button>
+          <button id="btnPrint">🖨 Cetak</button>
+        </div>
+        <script>
+          document.getElementById('btnPrint').addEventListener('click', function () {
+            window.print();
+          });
+          document.getElementById('btnDownload').addEventListener('click', function () {
+            var target = document.getElementById('struk-content');
+            html2canvas(target, { backgroundColor: '#ffffff', scale: 3 }).then(function (canvas) {
+              var link = document.createElement('a');
+              link.download = 'struk-${order.id.slice(0, 8)}.png';
+              link.href = canvas.toDataURL('image/png');
+              link.click();
+            });
+          });
+        <\/script>
+      </body>
+      </html>
+    `;
+
+    const jendelaCetak = window.open("", "_blank", "width=340,height=650");
+    if (!jendelaCetak) {
+      Swal.fire(
+        "Gagal membuka jendela cetak",
+        "Browser mungkin memblokir pop-up. Izinkan pop-up untuk situs ini lalu coba lagi.",
+        "warning",
+      );
+      return;
+    }
+    jendelaCetak.document.write(html);
+    jendelaCetak.document.close();
+    jendelaCetak.focus();
+  };
 
   // Global Function: Hapus pesanan
   window.deleteOrder = async (id) => {

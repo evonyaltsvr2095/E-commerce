@@ -5,6 +5,7 @@ document.addEventListener("alpine:init", () => {
     loading: true,
     loadError: false,
     activeCategory: "Semua",
+    searchQuery: "",
     kategoriList: ["Semua", "Espresso Base", "Manual Brew", "Other", "Snack"],
 
     async init() {
@@ -16,10 +17,32 @@ document.addEventListener("alpine:init", () => {
 
     setCategory(kategori) {
       this.activeCategory = kategori;
-      this.displayedItems =
-        kategori === "Semua"
-          ? this.items
-          : this.items.filter((item) => item.category === kategori);
+      this.applyFilters();
+    },
+
+    // Gabungan filter kategori + pencarian nama menu.
+    // Dipanggil tiap kali kategori diganti ATAU kotak search diketik.
+    applyFilters() {
+      const kataKunci = this.searchQuery.trim().toLowerCase();
+
+      this.displayedItems = this.items.filter((item) => {
+        const cocokKategori =
+          this.activeCategory === "Semua" ||
+          item.category === this.activeCategory;
+
+        if (!cocokKategori) return false;
+        if (!kataKunci) return true;
+
+        // Cocokkan ke nama menu utama, DAN ke nama tiap varian
+        // (mis. cari "ice" akan menemukan "Kopi Tubruk (Ice)")
+        const cocokNamaUtama = item.name.toLowerCase().includes(kataKunci);
+        const cocokVarian =
+          Array.isArray(item.variants) &&
+          item.variants.some((v) => v.name.toLowerCase().includes(kataKunci));
+
+        return cocokNamaUtama || cocokVarian;
+      });
+
       this.$nextTick(() => {
         feather.replace();
         setTimeout(() => feather.replace(), 100);
@@ -124,10 +147,7 @@ document.addEventListener("alpine:init", () => {
       });
 
       this.items = groups;
-      this.displayedItems =
-        this.activeCategory === "Semua"
-          ? groups
-          : groups.filter((item) => item.category === this.activeCategory);
+      this.applyFilters();
 
       this.loading = false;
       this.$nextTick(() => {
@@ -178,7 +198,12 @@ document.addEventListener("alpine:init", () => {
     add(newItem) {
       const cartItem = this.items.find((item) => item.id === newItem.id);
       if (!cartItem) {
-        this.items.push({ ...newItem, quantity: 1, total: newItem.price });
+        this.items.push({
+          ...newItem,
+          quantity: 1,
+          total: newItem.price,
+          notes: "",
+        });
       } else {
         this.items = this.items.map((item) => {
           if (item.id === newItem.id) {
@@ -190,6 +215,11 @@ document.addEventListener("alpine:init", () => {
       }
       this.quantity++;
       this.total += newItem.price;
+    },
+
+    setNote(id, text) {
+      const cartItem = this.items.find((item) => item.id === id);
+      if (cartItem) cartItem.notes = text;
     },
 
     remove(id) {

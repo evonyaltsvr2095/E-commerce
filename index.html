@@ -65,7 +65,13 @@
 
       <!-- Search Form start -->
       <div class="search-form">
-        <input type="search" id="search-box" placeholder="search here..." />
+        <input
+          type="search"
+          id="search-box"
+          placeholder="Cari menu..."
+          x-model="searchQuery"
+          @input="applyFilters()"
+        />
         <label for="search-box"><i data-feather="search"></i></label>
       </div>
       <!-- Search Form end -->
@@ -83,6 +89,14 @@
             <span x-text="item.quantity"></span>
             <button id="add" @click="$store.cart.add(item)">&plus;</button> &equals;
             <span x-text="rupiah(item.total)"></span>
+          </div>
+          <input
+            type="text"
+            placeholder="Catatan (misal: less sugar, tanpa es)"
+            :value="item.notes"
+            @input="$store.cart.setNote(item.id, $event.target.value)"
+            style="width:100%; box-sizing:border-box; margin-top:6px; padding:6px 8px; font-size:0.78rem; border-radius:6px; border:1px solid #ddd; color:#241a12;"
+          />
           </div>
         </div>
         </template>
@@ -172,6 +186,17 @@
       </div>
 
       <div class="row">
+        <div
+          x-show="!loading && !loadError && displayedItems.length === 0"
+          style="width:100%; text-align:center; padding:40px 0; color:#888;"
+        >
+          <p x-show="searchQuery" style="margin:0;">
+            Tidak ada menu yang cocok dengan "<span x-text="searchQuery"></span>".
+          </p>
+          <p x-show="!searchQuery" style="margin:0;">
+            Tidak ada menu di kategori ini.
+          </p>
+        </div>
         <template x-for="(item, index) in displayedItems" :key="index">
           <div class="product-card">
             <div class="product-image">
