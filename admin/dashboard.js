@@ -579,6 +579,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const elUrHpp = document.getElementById("urHpp");
     const elUrPengeluaran = document.getElementById("urPengeluaran");
     const elUrLabaRugi = document.getElementById("urLabaRugi");
+    const elUrBelanjaBahan = document.getElementById("urBelanjaBahan");
 
     // Hitung total HPP dari semua pesanan yang SUDAH BAYAR
     // (pakai hppPerProduk yang sudah diambil di atas)
@@ -594,6 +595,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? expenseData.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
         : 0;
 
+    // Total belanja bahan baku (info saja, TIDAK dipakai untuk hitung laba/rugi
+    // -- lihat penjelasan di catatan bawah kartu ini)
+    const { data: purchaseData, error: purchaseError } = await supabaseClient
+      .from("ingredient_purchases")
+      .select("total_price");
+
+    const totalBelanjaBahan =
+      !purchaseError && purchaseData
+        ? purchaseData.reduce((sum, p) => sum + (Number(p.total_price) || 0), 0)
+        : 0;
+
     const labaRugi = totalPendapatan - totalHppTerpakai - totalPengeluaranLain;
 
     elUrPendapatan.textContent =
@@ -603,6 +615,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Rp " + totalPengeluaranLain.toLocaleString("id-ID");
     elUrLabaRugi.textContent = "Rp " + labaRugi.toLocaleString("id-ID");
     elUrLabaRugi.style.color = labaRugi >= 0 ? "#1e7e34" : "#d93025";
+    elUrBelanjaBahan.textContent =
+      "Rp " + totalBelanjaBahan.toLocaleString("id-ID");
+
+    // ---------- Analisis Modal (Cash Basis) ----------
+    const elModalKeluar = document.getElementById("modalKeluar");
+    const elModalMasuk = document.getElementById("modalMasuk");
+    const elModalStatus = document.getElementById("modalStatus");
+    const elModalSelisih = document.getElementById("modalSelisih");
+
+    const totalModalKeluar = totalBelanjaBahan + totalPengeluaranLain;
+    const totalUangMasuk = totalPendapatan; // pesanan yang sudah dibayar
+    const selisihModal = totalUangMasuk - totalModalKeluar;
+
+    elModalKeluar.textContent =
+      "Rp " + totalModalKeluar.toLocaleString("id-ID");
+    elModalMasuk.textContent = "Rp " + totalUangMasuk.toLocaleString("id-ID");
+
+    if (selisihModal >= 0) {
+      elModalStatus.textContent = "Sudah Balik Modal";
+      elModalStatus.style.color = "#1e7e34";
+      elModalSelisih.textContent =
+        "Surplus Rp " + selisihModal.toLocaleString("id-ID");
+    } else {
+      elModalStatus.textContent = "Belum Balik Modal";
+      elModalStatus.style.color = "#d93025";
+      elModalSelisih.textContent =
+        "Kurang Rp " + Math.abs(selisihModal).toLocaleString("id-ID");
+    }
   }
   window.loadLaporan = loadLaporan;
 

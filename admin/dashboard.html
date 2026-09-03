@@ -583,11 +583,127 @@
                   Rp 0
                 </div>
               </div>
+              <div
+                style="
+                  background: #fdf8f3;
+                  border: 1px dashed #d8c3a5;
+                  border-radius: 8px;
+                  padding: 18px;
+                "
+              >
+                <div
+                  style="color: #8a6d4a; font-size: 0.85rem; margin-bottom: 6px"
+                >
+                  Total Belanja Bahan (info saja)
+                </div>
+                <div
+                  id="urBelanjaBahan"
+                  style="font-size: 1.2rem; font-weight: 700; color: #8a6d4a"
+                >
+                  Rp 0
+                </div>
+              </div>
             </div>
             <p style="color: #b0b0b0; font-size: 0.8rem; margin-top: 10px">
               Catatan: HPP dihitung dari resep menu yang sudah diatur di tab
-              "Resep Menu". Menu yang belum punya resep dianggap HPP = Rp 0.
+              "Resep Menu", berdasarkan bahan yang benar-benar TERPAKAI di
+              pesanan yang sudah dibayar. "Total Belanja Bahan" beda — itu total
+              UANG KELUAR untuk beli stok bahan (lihat tab "Bahan Baku"), belum
+              tentu semuanya sudah kepakai. Jangan dijumlahkan dengan HPP,
+              keduanya cara pandang yang berbeda.
             </p>
+          </div>
+
+          <!-- Analisis Modal / Balik Modal (Cash Basis) -->
+          <div style="margin-top: 25px">
+            <h4 style="margin-bottom: 6px; color: #1a1a1a">
+              Analisis Modal (Basis Uang Keluar-Masuk)
+            </h4>
+            <p style="color: #888; font-size: 0.8rem; margin-bottom: 15px">
+              Ini beda dari Untung/Rugi di atas. Di sini yang dihitung adalah
+              SEMUA uang yang benar-benar sudah keluar (belanja bahan +
+              pengeluaran operasional), dibandingkan uang yang sudah masuk.
+              Cocok untuk lihat "sudah balik modal atau belum", terlepas dari
+              stok bahan yang belum kepakai.
+            </p>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 15px;
+              "
+            >
+              <div
+                style="
+                  background: #fff;
+                  border: 1px solid #eee;
+                  border-radius: 8px;
+                  padding: 18px;
+                "
+              >
+                <div
+                  style="color: #888; font-size: 0.85rem; margin-bottom: 6px"
+                >
+                  Total Modal Keluar
+                </div>
+                <div
+                  id="modalKeluar"
+                  style="font-size: 1.2rem; font-weight: 700; color: #1a1a1a"
+                >
+                  Rp 0
+                </div>
+                <div style="color: #aaa; font-size: 0.7rem; margin-top: 4px">
+                  Belanja bahan + pengeluaran lain
+                </div>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border: 1px solid #eee;
+                  border-radius: 8px;
+                  padding: 18px;
+                "
+              >
+                <div
+                  style="color: #888; font-size: 0.85rem; margin-bottom: 6px"
+                >
+                  Total Uang Masuk
+                </div>
+                <div
+                  id="modalMasuk"
+                  style="font-size: 1.2rem; font-weight: 700; color: #1a1a1a"
+                >
+                  Rp 0
+                </div>
+                <div style="color: #aaa; font-size: 0.7rem; margin-top: 4px">
+                  Dari pesanan yang sudah dibayar
+                </div>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border: 1px solid #eee;
+                  border-radius: 8px;
+                  padding: 18px;
+                "
+              >
+                <div
+                  style="color: #888; font-size: 0.85rem; margin-bottom: 6px"
+                >
+                  Status Modal
+                </div>
+                <div
+                  id="modalStatus"
+                  style="font-size: 1.1rem; font-weight: 700"
+                >
+                  -
+                </div>
+                <div
+                  id="modalSelisih"
+                  style="font-size: 0.8rem; margin-top: 4px; color: #666"
+                ></div>
+              </div>
+            </div>
           </div>
         </section>
       </div>
