@@ -159,8 +159,20 @@
         Anda.
       </p>
 
+      <div class="category-filter" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin: 20px 0 30px;">
+        <template x-for="kategori in kategoriList" :key="kategori">
+          <button
+            type="button"
+            @click="setCategory(kategori)"
+            :class="{ active: activeCategory === kategori }"
+            class="category-filter-btn"
+            x-text="kategori"
+          ></button>
+        </template>
+      </div>
+
       <div class="row">
-        <template x-for="(item, index) in items" :key="index">
+        <template x-for="(item, index) in displayedItems" :key="index">
           <div class="product-card">
             <div class="product-image">
               <img :src="`img/products/${activeVariant(item).img}`" alt="item.name" />
@@ -202,6 +214,21 @@
     <!-- Products Section end -->
 
     <style>
+      .category-filter-btn {
+        padding: 8px 20px;
+        border-radius: 999px;
+        border: 1px solid #b6895b;
+        background: transparent;
+        color: #b6895b;
+        font-size: 2rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .category-filter-btn.active {
+        background: #b6895b;
+        color: #fff;
+      }
       .variant-btn {
         padding: 6px 16px;
         border-radius: 999px;

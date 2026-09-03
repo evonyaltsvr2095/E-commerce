@@ -174,6 +174,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     .subscribe();
 
   // 4. Load Data Produk dari Supabase
+  // Daftar kategori menu yang dipakai di form Tambah/Edit & filter
+  const DAFTAR_KATEGORI = ["Espresso Base", "Manual Brew", "Other", "Snack"];
+
   async function loadProducts() {
     const tbody = document.getElementById("productTableBody");
     const { data: products, error } = await supabaseClient
@@ -183,14 +186,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (error) {
       console.error("Gagal memuat produk:", error);
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; padding: 20px;">Gagal memuat data menu.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">Gagal memuat data menu.</td></tr>`;
       return;
     }
 
     document.getElementById("totalProductsCount").innerText = products.length;
 
     if (products.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #888;">Belum ada menu yang ditambahkan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #888;">Belum ada menu yang ditambahkan.</td></tr>`;
       return;
     }
 
@@ -206,6 +209,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? ` <span style="font-weight:500; font-size:0.75rem; padding:2px 6px; border-radius:4px; background:#eef2ff; color:#3b4ed6;">${item.variant_label}</span>`
             : ""
         }</td>
+        <td style="padding: 12px 15px;">
+          <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; background:#f1eee9; color:#6b5a44;">${item.category || "Other"}</span>
+        </td>
         <td style="padding: 12px 15px; color: #666; font-size: 0.85rem; max-width: 200px;">${item.description || "-"}</td>
         <td style="padding: 12px 15px; font-weight: 500; color: #1a1a1a;">Rp ${Number(item.price).toLocaleString("id-ID")}</td>
         <td style="padding: 12px 15px;">
@@ -214,7 +220,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </span>
         </td>
         <td style="padding: 12px 15px; text-align: center;">
-          <button onclick="editProduct(${item.id}, '${item.name}', '${item.description || ""}', ${item.price}, ${item.is_active}, ${item.variant_group ? `'${item.variant_group}'` : "null"}, ${item.variant_label ? `'${item.variant_label}'` : "null"})" style="background: none; border: none; cursor: pointer; color: #007bff; margin-right: 8px;" title="Edit">
+          <button onclick="editProduct(${item.id}, '${item.name}', '${item.description || ""}', ${item.price}, ${item.is_active}, ${item.variant_group ? `'${item.variant_group}'` : "null"}, ${item.variant_label ? `'${item.variant_label}'` : "null"}, '${item.category || "Other"}')" style="background: none; border: none; cursor: pointer; color: #007bff; margin-right: 8px;" title="Edit">
             <i data-feather="edit-2"></i>
           </button>
           <button onclick="deleteProduct(${item.id}, '${item.name}')" style="background: none; border: none; cursor: pointer; color: #dc3545;" title="Hapus">
@@ -613,6 +619,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           '<input id="swal-desc" class="swal2-input" placeholder="Deskripsi Singkat">' +
           '<input id="swal-price" type="number" class="swal2-input" placeholder="Harga (misal: 18000)">' +
           '<input id="swal-image" class="swal2-input" placeholder="Nama file di folder img/products/ (misal: v60.jpg)">' +
+          `<select id="swal-category" class="swal2-input">${DAFTAR_KATEGORI.map((k) => `<option value="${k}">${k}</option>`).join("")}</select>` +
           '<hr style="margin:14px 0 8px;">' +
           '<p style="text-align:left; font-size:0.78rem; color:#888; margin:0 0 8px;">Opsional: isi 2 kolom di bawah kalau menu ini punya varian (misal Hot/Ice). Menu dengan Grup Varian yang SAMA akan tampil jadi satu kartu dengan tombol pilihan di site customer.</p>' +
           '<input id="swal-variant-group" class="swal2-input" placeholder="Grup Varian (misal: kopi-tubruk) - kosongkan jika tanpa varian">' +
@@ -626,6 +633,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const description = document.getElementById("swal-desc").value;
           const price = document.getElementById("swal-price").value;
           const image = document.getElementById("swal-image").value;
+          const category = document.getElementById("swal-category").value;
           const variantGroup = document
             .getElementById("swal-variant-group")
             .value.trim();
@@ -651,6 +659,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             description,
             price: parseFloat(price),
             image,
+            category,
             variant_group: variantGroup || null,
             variant_label: variantLabel || null,
           };
@@ -679,12 +688,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     isActive,
     variantGroup,
     variantLabel,
+    category,
   ) => {
     const { value: formValues } = await Swal.fire({
       title: "Edit Menu & Harga",
       html:
         `<label style="display:block; text-align:left; font-size:0.8rem; margin-top:10px;">Nama Menu:</label>` +
         `<input id="swal-edit-name" class="swal2-input" value="${name}">` +
+        `<label style="display:block; text-align:left; font-size:0.8rem; margin-top:10px;">Kategori:</label>` +
+        `<select id="swal-edit-category" class="swal2-input">${DAFTAR_KATEGORI.map((k) => `<option value="${k}" ${category === k ? "selected" : ""}>${k}</option>`).join("")}</select>` +
         `<label style="display:block; text-align:left; font-size:0.8rem; margin-top:10px;">Deskripsi:</label>` +
         `<input id="swal-edit-desc" class="swal2-input" value="${description}">` +
         `<label style="display:block; text-align:left; font-size:0.8rem; margin-top:10px;">Harga (Rp):</label>` +
@@ -728,6 +740,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           price: parseFloat(document.getElementById("swal-edit-price").value),
           is_active:
             document.getElementById("swal-edit-status").value === "true",
+          category: document.getElementById("swal-edit-category").value,
           variant_group: variantGroupVal || null,
           variant_label: variantLabelVal || null,
         };

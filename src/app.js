@@ -1,13 +1,28 @@
 document.addEventListener("alpine:init", () => {
   Alpine.data("products", () => ({
     items: [],
+    displayedItems: [],
     loading: true,
     loadError: false,
+    activeCategory: "Semua",
+    kategoriList: ["Semua", "Espresso Base", "Manual Brew", "Other", "Snack"],
 
     async init() {
       await this.loadProducts();
       this.$nextTick(() => {
         feather.replace();
+      });
+    },
+
+    setCategory(kategori) {
+      this.activeCategory = kategori;
+      this.displayedItems =
+        kategori === "Semua"
+          ? this.items
+          : this.items.filter((item) => item.category === kategori);
+      this.$nextTick(() => {
+        feather.replace();
+        setTimeout(() => feather.replace(), 100);
       });
     },
 
@@ -36,6 +51,7 @@ document.addEventListener("alpine:init", () => {
         img: item.image,
         price: item.price,
         desc: item.description,
+        category: item.category || "Other",
         variantGroup: item.variant_group || null,
         variantLabel: item.variant_label || null,
       }));
@@ -55,6 +71,7 @@ document.addEventListener("alpine:init", () => {
             img: item.img,
             desc: item.desc,
             price: item.price,
+            category: item.category,
             variants: null, // tanpa varian
             // properti ini dipakai saat langsung add-to-cart (tanpa pilih varian)
           });
@@ -69,6 +86,7 @@ document.addEventListener("alpine:init", () => {
             img: item.img,
             desc: item.desc,
             price: item.price,
+            category: item.category,
             variants: [],
           });
         }
@@ -85,9 +103,16 @@ document.addEventListener("alpine:init", () => {
       });
 
       this.items = groups;
+      this.displayedItems =
+        this.activeCategory === "Semua"
+          ? groups
+          : groups.filter((item) => item.category === this.activeCategory);
 
       this.loading = false;
-      this.$nextTick(() => feather.replace());
+      this.$nextTick(() => {
+        feather.replace();
+        setTimeout(() => feather.replace(), 100);
+      });
     },
 
     // Menu dengan varian: yang aktif dipilih di kartu / modal
@@ -109,7 +134,10 @@ document.addEventListener("alpine:init", () => {
       const modal = document.querySelector("#item-detail-modal");
       modal.style.display = "flex";
       // Panggil lagi agar ikon di dalam modal juga muncul
-      this.$nextTick(() => feather.replace());
+      this.$nextTick(() => {
+        feather.replace();
+        setTimeout(() => feather.replace(), 100);
+      });
     },
 
     currentItem: {}, // Menyimpan data untuk modal
