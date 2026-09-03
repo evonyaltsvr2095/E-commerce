@@ -455,6 +455,28 @@ body {
   fill: var(--primary);
 }
 
+.metode-bayar-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.metode-bayar-btn:hover {
+  border-color: #b6895b;
+}
+
+.metode-bayar-btn.active {
+  background: #b6895b;
+  border-color: #b6895b;
+  color: #fff;
+}
+
 .products .product-price {
   font-size: 1.3rem;
   font-weight: bold;

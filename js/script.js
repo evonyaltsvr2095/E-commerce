@@ -1,12 +1,59 @@
-// ======================================================
-// KOPI NGALAM - SCRIPT.JS FINAL
-// ======================================================
-
-// ======================================================
+// KOPI NGALAM
 // KONFIGURASI
-// ======================================================
 
 const WHATSAPP_ADMIN = "6285961438827";
+
+// METODE PEMBAYARAN
+
+const METODE_PEMBAYARAN = [
+  {
+    id: "BRI",
+    label: "BRI",
+    tipe: "transfer",
+    bank: "Bank BRI",
+    nomor: "2066 0100 5002 538",
+    atasNama: "FAIRUZ IQBAL AL FAROBI",
+  },
+  {
+    id: "MANDIRI",
+    label: "Mandiri",
+    tipe: "transfer",
+    bank: "Bank Mandiri",
+    nomor: "1440 0296 0679 2",
+    atasNama: "FAIRUZ IQBAL AL FAROBI",
+  },
+  {
+    id: "DANA",
+    label: "DANA",
+    tipe: "ewallet",
+    bank: "DANA",
+    nomor: "0859 6143 8827",
+    atasNama: "FAIRUZ IQBAL AL FAROBI",
+  },
+  {
+    id: "GOPAY",
+    label: "GoPay",
+    tipe: "ewallet",
+    bank: "GoPay",
+    nomor: "0859 6143 8827",
+    atasNama: "FAIRUZ IQBAL AL FAROBI",
+  },
+  {
+    id: "QRIS",
+    label: "QRIS",
+    tipe: "qris",
+    gambar: "img/qr/qr-code.jpeg",
+  },
+  {
+    id: "TUNAI",
+    label: "Tunai",
+    tipe: "tunai",
+    pesan: [
+      "BAYAR KE KASIR SESUAI NOMINAL PESANAN ANDA",
+      "SETELAH MEMBAYAR PESANAN AKAN KAMI PROSES",
+    ],
+  },
+];
 
 // Catatan: GOOGLE_SCRIPT_URL sudah TIDAK dipakai lagi.
 // Pesanan sekarang disimpan langsung ke Supabase (lihat kirimKeSupabase()).
@@ -458,6 +505,7 @@ async function kirimKeSupabase(dataPesanan) {
       p_customer_phone: String(dataPesanan.phone || "").replace(/\D/g, ""),
       p_items: dataPesanan.items,
       p_total: dataPesanan.total,
+      p_payment_method: dataPesanan.paymentMethod || null,
     },
   );
 
@@ -553,37 +601,74 @@ if (checkoutButton) {
     }
 
     // -----------------------------------------------
-    // TAMPILKAN QR CODE
+    // PILIH METODE PEMBAYARAN
     // -----------------------------------------------
 
+    function htmlDetailMetode(m) {
+      if (m.tipe === "tunai") {
+        return `
+          <div style="text-align:left;">
+            <div style="font-weight:700; margin-bottom:6px;">Bayar Tunai</div>
+            ${m.pesan.map((baris) => `<div>${baris}</div>`).join("")}
+          </div>
+        `;
+      }
+
+      if (m.tipe === "qris") {
+        return `
+          <div style="text-align:center;">
+            <div style="font-weight:700; margin-bottom:8px;">Scan QRIS</div>
+            <img src="${m.gambar}" alt="QRIS" style="width:220px; height:auto; border-radius:8px; border:1px solid #eee;">
+          </div>
+        `;
+      }
+
+      return `
+        <div style="text-align:left;">
+          <div style="font-weight:700; margin-bottom:6px;">${m.bank}</div>
+          <div>No. ${m.tipe === "transfer" ? "Rekening" : m.label}: <b>${m.nomor}</b></div>
+          <div>Atas Nama: ${m.atasNama}</div>
+        </div>
+      `;
+    }
+
+    let metodeTerpilih = null;
+
+    const tombolMetodeHtml = METODE_PEMBAYARAN.map(
+      (m) => `
+        <button
+          type="button"
+          class="metode-bayar-btn"
+          data-metode="${m.id}"
+        >${m.label}</button>
+      `,
+    ).join("");
+
     const result = await Swal.fire({
-      title: "Selesaikan Pembayaran",
+      title: "Pilih Metode Pembayaran",
 
       html: `
-       <div style="font-size: 1.5rem; margin-bottom: 10px;">
-         * Anda akan diarahkan ke whatsapp untuk mengkonfirmasi pesanan *
-        </div>
-        
-        <div style="font-size: 1rem; margin-bottom: 10px;">
+        <div style="font-size: 1rem; margin-bottom: 6px;">
           Total yang harus dibayar:
         </div>
 
-        <div style="
-          font-size: 1.3rem;
-          font-weight: bold;
-          margin-bottom: 15px;
-        ">
+        <div style="font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">
           ${rupiah(total)}
         </div>
+
+        <div id="metode-list" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:14px;">
+          ${tombolMetodeHtml}
+        </div>
+
+        <div
+          id="metode-detail"
+          style="display:none; min-height:60px; padding:12px; border-radius:8px; background:#f7f4f0; margin-bottom:12px; font-size: 0.9rem;"
+        ></div>
+
+        <div style="font-size: 0.8rem; color: #888;">
+          * Setelah konfirmasi, Anda akan diarahkan ke WhatsApp *
+        </div>
       `,
-
-      imageUrl: "img/qr/qr-code.jpeg",
-
-      imageWidth: 300,
-
-      imageHeight: 370,
-
-      imageAlt: "QR Code Pembayaran",
 
       showCancelButton: true,
 
@@ -596,19 +681,43 @@ if (checkoutButton) {
       cancelButtonColor: "#666",
 
       allowOutsideClick: false,
+
+      didOpen: () => {
+        const detailBox = document.getElementById("metode-detail");
+
+        document.querySelectorAll(".metode-bayar-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document
+              .querySelectorAll(".metode-bayar-btn")
+              .forEach((b) => b.classList.remove("active"));
+
+            btn.classList.add("active");
+
+            metodeTerpilih = btn.getAttribute("data-metode");
+
+            const m = METODE_PEMBAYARAN.find((x) => x.id === metodeTerpilih);
+            detailBox.innerHTML = htmlDetailMetode(m);
+            detailBox.style.display = "block";
+          });
+        });
+      },
+
+      preConfirm: () => {
+        if (!metodeTerpilih) {
+          Swal.showValidationMessage("Silakan pilih metode pembayaran dulu.");
+          return false;
+        }
+        return metodeTerpilih;
+      },
     });
 
-    // -----------------------------------------------
     // JIKA USER MEMBATALKAN
-    // -----------------------------------------------
 
     if (!result.isConfirmed) {
       return;
     }
 
-    // -----------------------------------------------
     // SUSUN DAFTAR PESANAN
-    // -----------------------------------------------
 
     const daftarPesanan = cartItems
       .map(function (item) {
@@ -616,9 +725,7 @@ if (checkoutButton) {
       })
       .join(", ");
 
-    // -----------------------------------------------
     // DATA UNTUK SUPABASE
-    // -----------------------------------------------
 
     const itemsUntukDb = cartItems.map(function (item) {
       return {
@@ -641,6 +748,8 @@ if (checkoutButton) {
       items: itemsUntukDb,
 
       total: total,
+
+      paymentMethod: result.value,
     };
 
     // -----------------------------------------------
@@ -682,7 +791,18 @@ if (checkoutButton) {
 
       let pesan = "Halo Admin Kopi Ngalam!\n\n";
 
-      pesan += "Saya *Sudah Membayar* pesanan berikut:\n\n";
+      const metodeDipilih = METODE_PEMBAYARAN.find(
+        (m) => m.id === result.value,
+      );
+
+      if (metodeDipilih && metodeDipilih.tipe === "tunai") {
+        pesan +=
+          "Saya *akan membayar TUNAI di kasir* untuk pesanan berikut:\n\n";
+      } else if (metodeDipilih && metodeDipilih.tipe === "qris") {
+        pesan += "Saya *sudah bayar via QRIS* untuk pesanan berikut:\n\n";
+      } else {
+        pesan += `Saya *sudah transfer via ${metodeDipilih ? metodeDipilih.label : result.value}* untuk pesanan berikut:\n\n`;
+      }
 
       cartItems.forEach(function (item) {
         pesan += `- ${item.name} (${item.quantity} x ${rupiah(item.price)})\n`;
@@ -741,9 +861,7 @@ if (checkoutButton) {
         shoppingCart.classList.remove("active");
       }
 
-      // ---------------------------------------------
       // PESAN SUKSES
-      // ---------------------------------------------
 
       await Swal.fire({
         icon: "success",
@@ -757,9 +875,7 @@ if (checkoutButton) {
         confirmButtonColor: "#b6895b",
       });
 
-      // ---------------------------------------------
       // BUKA WHATSAPP
-      // ---------------------------------------------
 
       window.location.href = whatsappUrl;
     } catch (error) {
