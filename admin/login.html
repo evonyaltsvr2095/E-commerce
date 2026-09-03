@@ -21,16 +21,16 @@
       <p class="subtitle">Kelola produk, pesanan, dan pengaturan toko.</p>
 
       <form id="adminLoginForm" autocomplete="on">
-        <label for="username">Username</label>
+        <label for="email">Email</label>
         <div class="input-wrap">
           <i data-feather="user"></i>
-          <input id="username" name="username" type="text" placeholder="Masukkan username" autocomplete="username" required>
+          <input id="email" name="email" type="email" placeholder="Masukkan email" autocomplete="email" required oninvalid="this.setCustomValidity('Email iku diisi!!')" oninput="this.setCustomValidity('')">
         </div>
 
         <label for="password">Password</label>
         <div class="input-wrap">
           <i data-feather="lock"></i>
-          <input id="password" name="password" type="password" placeholder="Masukkan password" autocomplete="current-password" required>
+          <input id="password" name="password" type="password" placeholder="Masukkan password" autocomplete="current-password" required oninvalid="this.setCustomValidity('Password e jo lali')" oninput="this.setCustomValidity('')">
           <button type="button" id="togglePassword" aria-label="Tampilkan password">
             <i data-feather="eye"></i>
           </button>
