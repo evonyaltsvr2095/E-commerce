@@ -43,6 +43,19 @@ document.addEventListener("alpine:init", () => {
         return;
       }
 
+      // Ambil ringkasan rating (rata-rata bintang + jumlah ulasan) per menu
+      const { data: ratingData } = await supabaseClient
+        .from("product_rating_summary")
+        .select("product_id, avg_rating, review_count");
+
+      const ratingMap = {};
+      (ratingData || []).forEach((r) => {
+        ratingMap[r.product_id] = {
+          avgRating: Number(r.avg_rating) || 0,
+          reviewCount: Number(r.review_count) || 0,
+        };
+      });
+
       // Samakan nama kolom dari database (image, description)
       // dengan nama field yang dipakai template (img, desc)
       const mapped = data.map((item) => ({
@@ -54,6 +67,8 @@ document.addEventListener("alpine:init", () => {
         category: item.category || "Other",
         variantGroup: item.variant_group || null,
         variantLabel: item.variant_label || null,
+        avgRating: ratingMap[item.id]?.avgRating || 0,
+        reviewCount: ratingMap[item.id]?.reviewCount || 0,
       }));
 
       // Kelompokkan menu yang punya variant_group yang sama
@@ -72,6 +87,8 @@ document.addEventListener("alpine:init", () => {
             desc: item.desc,
             price: item.price,
             category: item.category,
+            avgRating: item.avgRating,
+            reviewCount: item.reviewCount,
             variants: null, // tanpa varian
             // properti ini dipakai saat langsung add-to-cart (tanpa pilih varian)
           });
@@ -87,6 +104,8 @@ document.addEventListener("alpine:init", () => {
             desc: item.desc,
             price: item.price,
             category: item.category,
+            avgRating: item.avgRating,
+            reviewCount: item.reviewCount,
             variants: [],
           });
         }
@@ -99,6 +118,8 @@ document.addEventListener("alpine:init", () => {
           name: `${item.name} (${item.variantLabel})`,
           img: item.img,
           desc: item.desc,
+          avgRating: item.avgRating,
+          reviewCount: item.reviewCount,
         });
       });
 

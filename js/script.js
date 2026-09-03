@@ -246,14 +246,25 @@ window.orderHistory = function () {
         }
 
         const hasil = (data || []).map(function (order) {
-          const daftarItem = Array.isArray(order.items)
-            ? order.items.map((it) => `${it.name} (${it.quantity}x)`).join(", ")
-            : "-";
+          const rawItems = Array.isArray(order.items) ? order.items : [];
+
+          const daftarItem = rawItems
+            .map((it) => `${it.name} (${it.quantity}x)`)
+            .join(", ");
 
           return {
             idOrder: order.id,
             tanggal: new Date(order.created_at).toLocaleString("id-ID"),
-            pesanan: daftarItem,
+            items: rawItems.map((it) => ({
+              product_id: it.product_id,
+              name: it.name,
+              quantity: it.quantity,
+              myRating: 0,
+              myComment: "",
+              submitting: false,
+              submitted: false,
+            })),
+            pesanan: daftarItem || "-",
             total: order.total,
             statusPembayaran: order.payment_status,
             statusPesanan: order.order_status,
@@ -262,6 +273,32 @@ window.orderHistory = function () {
 
         this.historyItems = hasil;
         this.searched = true;
+
+        // -----------------------------------------------
+        // AMBIL RATING YANG SUDAH PERNAH DIISI (kalau ada)
+        // supaya bintang & komentar lama tampil terisi lagi
+        // -----------------------------------------------
+        const orderIds = hasil.map((o) => o.idOrder).filter(Boolean);
+        if (orderIds.length > 0) {
+          const { data: reviewData, error: reviewError } = await supabaseClient
+            .from("product_reviews")
+            .select("order_id, product_id, rating, comment")
+            .in("order_id", orderIds);
+
+          if (!reviewError && reviewData) {
+            reviewData.forEach((rv) => {
+              const order = hasil.find((o) => o.idOrder === rv.order_id);
+              const item = order?.items.find(
+                (it) => it.product_id === rv.product_id,
+              );
+              if (item) {
+                item.myRating = rv.rating;
+                item.myComment = rv.comment || "";
+                item.submitted = true;
+              }
+            });
+          }
+        }
 
         if (hasil.length === 0) {
           this.errorMessage =
@@ -274,6 +311,61 @@ window.orderHistory = function () {
           "Riwayat pesanan tidak dapat diambil. Silakan coba lagi.";
       } finally {
         this.loading = false;
+      }
+    },
+
+    // ==================================================
+    // RATING & ULASAN MENU
+    // ==================================================
+
+    pilihBintang(item, angka) {
+      item.myRating = angka;
+    },
+
+    async kirimRating(order, item) {
+      if (!item.myRating) {
+        Swal.fire({
+          icon: "warning",
+          title: "Pilih bintang dulu",
+          text: "Klik salah satu bintang sebelum mengirim rating.",
+        });
+        return;
+      }
+
+      item.submitting = true;
+
+      try {
+        const { error } = await supabaseClient.rpc("submit_product_review", {
+          p_order_id: order.idOrder,
+          p_product_id: item.product_id,
+          p_phone: String(this.phone || "").replace(/\D/g, ""),
+          p_email: String(this.email || "")
+            .trim()
+            .toLowerCase(),
+          p_rating: item.myRating,
+          p_comment: item.myComment || null,
+        });
+
+        if (error) throw error;
+
+        item.submitted = true;
+
+        Swal.fire({
+          icon: "success",
+          title: "Terima kasih!",
+          text: "Rating Anda berhasil disimpan.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Gagal mengirim rating:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Gagal mengirim rating",
+          text: error.message || "Silakan coba lagi.",
+        });
+      } finally {
+        item.submitting = false;
       }
     },
   };

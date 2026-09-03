@@ -179,21 +179,29 @@
             </div>
             <div class="product-content">
               <h3 x-text="item.name"></h3>
-              <div class="product-stars">
-                <i data-feather="star" class="star-full"></i>
-                <i data-feather="star" class="star-full"></i>
-                <i data-feather="star" class="star-full"></i>
-                <i data-feather="star" class="star-full"></i>
-                <i data-feather="star"></i>
+              <div class="product-stars" x-show="activeVariant(item).reviewCount > 0">
+                <template x-for="n in 5" :key="n">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    :class="n <= Math.round(activeVariant(item).avgRating) ? 'star-full' : ''"
+                  ><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                </template>
+                <span style="font-size:0.78rem; color:#888; margin-left:4px;" x-text="`${activeVariant(item).avgRating} (${activeVariant(item).reviewCount})`"></span>
+              </div>
+              <div class="product-stars" x-show="!activeVariant(item).reviewCount" style="font-size:0.78rem; color:#aaa;">
+                Belum ada rating
               </div>
               <div class="product-price" x-text="rupiah(activeVariant(item).price)"></div>
               <div class="product-icons">
   <a href="#" @click.prevent="$store.cart.add(activeVariant(item))">
-    <i data-feather="shopping-cart"></i>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
   </a>
   <a href="#" class="item-detail-button" @click.prevent="changeItem(item)">
-                <i data-feather="eye"></i>
-</a>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+  </a>
 </div>
               <div class="product-variants" x-show="item.variants" style="display:flex; gap:8px; margin-top:8px; justify-content:center; flex-wrap:wrap;">
                 <template x-for="variant in item.variants" :key="variant.id">
@@ -328,12 +336,20 @@
         <h3 x-text="currentItem.name"></h3>
         <p x-text="activeVariant(currentItem).desc"></p>
         
-        <div class="product-stars">
-          <i data-feather="star" class="star-full"></i>
-          <i data-feather="star" class="star-full"></i>
-          <i data-feather="star" class="star-full"></i>
-          <i data-feather="star" class="star-full"></i>
-          <i data-feather="star"></i>
+        <div class="product-stars" x-show="activeVariant(currentItem).reviewCount > 0">
+          <template x-for="n in 5" :key="n">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"
+              :class="n <= Math.round(activeVariant(currentItem).avgRating) ? 'star-full' : ''"
+            ><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </template>
+          <span style="font-size:0.78rem; color:#888; margin-left:4px;" x-text="`${activeVariant(currentItem).avgRating} (${activeVariant(currentItem).reviewCount})`"></span>
+        </div>
+        <div class="product-stars" x-show="!activeVariant(currentItem).reviewCount" style="font-size:0.78rem; color:#aaa;">
+          Belum ada rating
         </div>
 
         <div class="product-price">
@@ -353,7 +369,8 @@
         </div>
         
         <a href="#" @click.prevent="$store.cart.add(activeVariant(currentItem))">
-          <i data-feather="shopping-cart"></i> <span>add to cart</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px; margin-right:4px;"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+          <span>add to cart</span>
         </a>
       </div>
     </div>
@@ -588,6 +605,70 @@
               ></span>
 
             </p>
+
+            <!-- ==========================================
+                 BERI RATING (hanya untuk pesanan Sudah Bayar)
+            =========================================== -->
+
+            <template x-if="order.statusPembayaran === 'Sudah Bayar'">
+              <div style="margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 10px;">
+
+                <p style="margin: 0 0 8px; font-weight: bold; font-size: 0.9rem;">
+                  Beri Rating Menu
+                </p>
+
+                <template x-for="(item, itemIndex) in order.items" :key="itemIndex">
+                  <div style="margin-bottom: 14px; padding: 10px; background: #faf7f2; border-radius: 8px;">
+
+                    <p style="margin: 0 0 6px; font-size: 0.88rem; font-weight: 600;" x-text="item.name"></p>
+
+                    <div style="display:flex; gap:4px; margin-bottom:8px;">
+                      <template x-for="bintang in [1,2,3,4,5]" :key="bintang">
+                        <span
+                          @click="pilihBintang(item, bintang)"
+                          :style="`cursor:pointer; font-size:1.4rem; line-height:1; color:${bintang <= item.myRating ? '#f5a623' : '#ccc'};`"
+                          x-text="bintang <= item.myRating ? '★' : '☆'"
+                        ></span>
+                      </template>
+                    </div>
+
+                    <textarea
+                      x-model="item.myComment"
+                      placeholder="Tulis ulasan singkat (opsional)"
+                      rows="2"
+                      style="width:100%; box-sizing:border-box; padding:8px; border-radius:6px; border:1px solid #ddd; font-size:0.85rem; resize:vertical;"
+                    ></textarea>
+
+                    <button
+                      type="button"
+                      @click="kirimRating(order, item)"
+                      :disabled="item.submitting"
+                      style="
+                        margin-top: 8px;
+                        padding: 8px 16px;
+                        border: none;
+                        border-radius: 6px;
+                        background: #b6895b;
+                        color: white;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                      "
+                    >
+                      <span x-show="!item.submitting" x-text="item.submitted ? 'Perbarui Rating' : 'Kirim Rating'"></span>
+                      <span x-show="item.submitting">Mengirim...</span>
+                    </button>
+
+                    <span
+                      x-show="item.submitted"
+                      style="margin-left:8px; font-size:0.78rem; color:#1e7e34;"
+                    >✓ Sudah dinilai</span>
+
+                  </div>
+                </template>
+
+              </div>
+            </template>
 
           </div>
 
