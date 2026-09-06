@@ -16,6 +16,46 @@ document.addEventListener("DOMContentLoaded", async () => {
       session.user.email.split("@")[0];
   }
 
+  // 2b. Tentukan role staff yang sedang login (admin / kasir)
+  const { data: myProfile, error: myProfileError } = await supabaseClient
+    .from("admin_profiles")
+    .select("role, username, display_name")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  if (myProfileError || !myProfile) {
+    await Swal.fire({
+      icon: "error",
+      title: "Akses Ditolak",
+      text: "Akun ini tidak terdaftar sebagai staff Kopi Ngalam.",
+    });
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+    return;
+  }
+
+  window.currentStaffRole = myProfile.role; // "admin" atau "kasir"
+
+  // 2c. Kalau kasir, sembunyikan menu & tombol yang bukan bagiannya
+  if (window.currentStaffRole !== "admin") {
+    document
+      .querySelectorAll(
+        '.nav-link[data-tab]:not([data-tab="pesanan"]):not([data-tab="setting"])',
+      )
+      .forEach((link) => {
+        link.style.display = "none";
+      });
+
+    const navAkuntansi = document.getElementById("navAkuntansi");
+    if (navAkuntansi) navAkuntansi.style.display = "none";
+
+    const navAdmin = document.getElementById("navAdmin");
+    if (navAdmin) navAdmin.style.display = "none";
+
+    const btnAddProduct = document.getElementById("btnAddProduct");
+    if (btnAddProduct) btnAddProduct.style.display = "none";
+  }
+
   // 3. Logika Navigasi Tab (Sidebar)
   const navLinks = document.querySelectorAll(".nav-link[data-tab]");
   const tabContents = document.querySelectorAll(".tab-content");
@@ -72,7 +112,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                   ? "Resep Menu"
                   : targetTab === "pengeluaran"
                     ? "Pengeluaran"
-                    : "Dashboard";
+                    : targetTab === "staff"
+                      ? "Kelola Staff"
+                      : "Dashboard";
 
       if (targetTab === "pesanan") {
         resetBadgePesanan();
@@ -94,8 +136,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (targetTab === "pengeluaran") {
         loadExpenses();
       }
+
+      if (targetTab === "staff") {
+        loadStaff();
+      }
     });
   });
+
+  // Kasir langsung diarahkan ke tab Pesanan (bukan Dashboard) saat pertama buka
+  if (window.currentStaffRole !== "admin") {
+    const pesananLink = document.querySelector('.nav-link[data-tab="pesanan"]');
+    if (pesananLink) pesananLink.click();
+  }
 
   // 3b. Notifikasi Pesanan Baru (Real-time)
   const pesananBadge = document.getElementById("pesananBadge");
@@ -220,12 +272,22 @@ document.addEventListener("DOMContentLoaded", async () => {
           </span>
         </td>
         <td style="padding: 12px 15px; text-align: center;">
-          <button onclick="editProduct(${item.id}, '${item.name}', '${item.description || ""}', ${item.price}, ${item.is_active}, ${item.variant_group ? `'${item.variant_group}'` : "null"}, ${item.variant_label ? `'${item.variant_label}'` : "null"}, '${item.category || "Other"}')" style="background: none; border: none; cursor: pointer; color: #007bff; margin-right: 8px;" title="Edit">
-            <i data-feather="edit-2"></i>
-          </button>
-          <button onclick="deleteProduct(${item.id}, '${item.name}')" style="background: none; border: none; cursor: pointer; color: #dc3545;" title="Hapus">
-            <i data-feather="trash-2"></i>
-          </button>
+          ${
+            window.currentStaffRole === "admin"
+              ? `
+            <button onclick="editProduct(${item.id}, '${item.name}', '${item.description || ""}', ${item.price}, ${item.is_active}, ${item.variant_group ? `'${item.variant_group}'` : "null"}, ${item.variant_label ? `'${item.variant_label}'` : "null"}, '${item.category || "Other"}')" style="background: none; border: none; cursor: pointer; color: #007bff; margin-right: 8px;" title="Edit">
+              <i data-feather="edit-2"></i>
+            </button>
+            <button onclick="deleteProduct(${item.id}, '${item.name}')" style="background: none; border: none; cursor: pointer; color: #dc3545;" title="Hapus">
+              <i data-feather="trash-2"></i>
+            </button>
+          `
+              : `
+            <button onclick="toggleAvailability(${item.id}, ${item.is_active})" style="background:${item.is_active ? "#fbeae8" : "#e6f4ea"}; color:${item.is_active ? "#d93025" : "#1e7e34"}; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600;">
+              ${item.is_active ? "Nonaktifkan" : "Aktifkan"}
+            </button>
+          `
+          }
         </td>
       </tr>
     `,
@@ -234,6 +296,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     feather.replace();
   }
+
+  window.toggleAvailability = async (id, isCurrentlyActive) => {
+    const { error } = await supabaseClient.rpc("toggle_product_availability", {
+      p_product_id: id,
+      p_is_active: !isCurrentlyActive,
+    });
+
+    if (error) {
+      Swal.fire("Gagal!", error.message, "error");
+    } else {
+      loadProducts();
+    }
+  };
 
   // Initial Load
   loadProducts();
@@ -305,9 +380,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             <button onclick="cetakStruk('${order.id}')" style="background:none; border:none; cursor:pointer; color:#1a1a1a; margin-right:8px;" title="Struk / Invoice">
               <i data-feather="printer"></i>
             </button>
-            <button onclick="deleteOrder('${order.id}')" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus">
-              <i data-feather="trash-2"></i>
-            </button>
+            ${
+              window.currentStaffRole === "admin"
+                ? `
+              <button onclick="deleteOrder('${order.id}')" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus">
+                <i data-feather="trash-2"></i>
+              </button>
+            `
+                : ""
+            }
           </td>
         </tr>
       `;
@@ -1780,6 +1861,192 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       renderDaftarKategori();
     });
+
+  // =========================================================
+  // 12. KELOLA STAFF (admin_profiles) - HANYA UNTUK ADMIN
+  // =========================================================
+
+  let daftarStaffCache = [];
+
+  async function loadStaff() {
+    const tbody = document.getElementById("staffTableBody");
+    if (!tbody) return;
+
+    const { data, error } = await supabaseClient
+      .from("admin_profiles")
+      .select("id, username, display_name, role")
+      .order("username", { ascending: true });
+
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red; padding:20px;">Gagal memuat data staff.</td></tr>`;
+      return;
+    }
+
+    daftarStaffCache = data || [];
+
+    tbody.innerHTML = daftarStaffCache
+      .map((s) => {
+        const isSelf = s.id === session.user.id;
+        return `
+        <tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 12px 15px; color: #1a1a1a; font-weight: 600;">${s.display_name}${isSelf ? ' <span style="font-size:0.75rem; color:#888;">(Anda)</span>' : ""}</td>
+          <td style="padding: 12px 15px; color: #1a1a1a;">${s.username}</td>
+          <td style="padding: 12px 15px;">
+            <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; ${s.role === "admin" ? "background:#eef2ff; color:#3b4ed6;" : "background:#f1eee9; color:#6b5a44;"}">${s.role === "admin" ? "Admin" : "Kasir"}</span>
+          </td>
+          <td style="padding: 12px 15px; text-align: center;">
+            ${
+              isSelf
+                ? '<span style="color:#ccc; font-size:0.8rem;">-</span>'
+                : `<button onclick="deleteStaff('${s.id}', '${String(s.display_name).replace(/'/g, "\\'")}')" style="background:none; border:none; cursor:pointer; color:#dc3545;" title="Hapus"><i data-feather="trash-2"></i></button>`
+            }
+          </td>
+        </tr>
+      `;
+      })
+      .join("");
+
+    feather.replace();
+  }
+  window.loadStaff = loadStaff;
+
+  document
+    .getElementById("tambahStaffBtn")
+    ?.addEventListener("click", async () => {
+      const { value: formValues } = await Swal.fire({
+        title: "Tambah Staff Baru",
+        html:
+          '<input id="swal-staff-nama" class="swal2-input" placeholder="Nama lengkap">' +
+          '<input id="swal-staff-username" class="swal2-input" placeholder="Username (untuk login)">' +
+          '<input id="swal-staff-email" type="email" class="swal2-input" placeholder="Email (opsional, kalau tidak diisi dibuatkan otomatis)">' +
+          '<input id="swal-staff-password" type="password" class="swal2-input" placeholder="Password (minimal 6 karakter)">' +
+          `<select id="swal-staff-role" class="swal2-input">
+          <option value="kasir">Kasir</option>
+          <option value="admin">Admin</option>
+        </select>`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: "Tambah Staff",
+        cancelButtonText: "Batal",
+        preConfirm: () => {
+          const nama = document.getElementById("swal-staff-nama").value.trim();
+          const username = document
+            .getElementById("swal-staff-username")
+            .value.trim()
+            .toLowerCase();
+          const emailInput = document
+            .getElementById("swal-staff-email")
+            .value.trim()
+            .toLowerCase();
+          const password = document.getElementById("swal-staff-password").value;
+          const role = document.getElementById("swal-staff-role").value;
+
+          if (!nama || !username || !password) {
+            Swal.showValidationMessage(
+              "Nama, username, dan password wajib diisi.",
+            );
+            return false;
+          }
+          if (password.length < 6) {
+            Swal.showValidationMessage("Password minimal 6 karakter.");
+            return false;
+          }
+          if (!/^[a-z0-9_.]+$/.test(username)) {
+            Swal.showValidationMessage(
+              "Username cuma boleh huruf kecil, angka, titik, underscore (tanpa spasi).",
+            );
+            return false;
+          }
+
+          const email = emailInput || `${username}@admin.kopingalam.local`;
+
+          return { nama, username, email, password, role };
+        },
+      });
+
+      if (!formValues) return;
+
+      Swal.fire({
+        title: "Membuat akun...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      try {
+        // PENTING: pakai client Supabase TERPISAH (bukan supabaseClient utama)
+        // supaya proses signUp staff baru ini TIDAK menggantikan sesi login
+        // Anda sendiri di browser ini.
+        const clientSementara = window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_PUBLISHABLE_KEY,
+          {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+              detectSessionInUrl: false,
+            },
+          },
+        );
+
+        const { data: signUpData, error: signUpError } =
+          await clientSementara.auth.signUp({
+            email: formValues.email,
+            password: formValues.password,
+          });
+
+        if (signUpError) throw signUpError;
+        if (!signUpData.user) throw new Error("Gagal membuat akun staff.");
+
+        const { error: profileError } = await supabaseClient
+          .from("admin_profiles")
+          .insert([
+            {
+              id: signUpData.user.id,
+              username: formValues.username,
+              display_name: formValues.nama,
+              role: formValues.role,
+            },
+          ]);
+
+        if (profileError) throw profileError;
+
+        Swal.fire(
+          "Berhasil!",
+          `Akun ${formValues.role} "${formValues.nama}" berhasil dibuat. Username: ${formValues.username}`,
+          "success",
+        );
+        loadStaff();
+      } catch (error) {
+        console.error("Gagal membuat staff:", error);
+        Swal.fire("Gagal!", error.message || "Terjadi kesalahan.", "error");
+      }
+    });
+
+  window.deleteStaff = async (id, nama) => {
+    const result = await Swal.fire({
+      title: `Hapus akun "${nama}"?`,
+      text: "Akun ini tidak akan bisa login/akses dashboard lagi setelah dihapus.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      confirmButtonText: "Ya, Hapus",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
+
+    const { error } = await supabaseClient
+      .from("admin_profiles")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      Swal.fire("Gagal!", error.message, "error");
+    } else {
+      Swal.fire("Terhapus!", "Akun staff sudah dihapus.", "success");
+      loadStaff();
+    }
+  };
 
   // 8. Logout Handling
   document

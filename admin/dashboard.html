@@ -48,7 +48,7 @@
         >
       </nav>
 
-      <nav>
+      <nav id="navAkuntansi">
         <p class="nav-title">AKUNTANSI</p>
         <a class="nav-link" href="#" data-tab="bahan"
           ><i data-feather="box"></i> Bahan Baku</a
@@ -58,6 +58,13 @@
         >
         <a class="nav-link" href="#" data-tab="pengeluaran"
           ><i data-feather="credit-card"></i> Pengeluaran</a
+        >
+      </nav>
+
+      <nav id="navAdmin">
+        <p class="nav-title">ADMINISTRASI</p>
+        <a class="nav-link" href="#" data-tab="staff"
+          ><i data-feather="users"></i> Kelola Staff</a
         >
       </nav>
 
@@ -833,7 +840,13 @@
                     <th style="padding: 10px 15px; color: #1a1a1a">
                       Harga/Satuan
                     </th>
-                    <th style="padding: 10px 15px; text-align: center; color: #1a1a1a">
+                    <th
+                      style="
+                        padding: 10px 15px;
+                        text-align: center;
+                        color: #1a1a1a;
+                      "
+                    >
                       Aksi
                     </th>
                   </tr>
@@ -1111,6 +1124,89 @@
                 <tr>
                   <td
                     colspan="5"
+                    style="text-align: center; padding: 20px; color: #888"
+                  >
+                    Memuat data...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+      <!-- TAB 8: KELOLA STAFF -->
+      <div id="tab-staff" class="tab-content" style="display: none">
+        <section class="next-step" style="margin-top: 0">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <div>
+              <h3>Kelola Staff</h3>
+              <p style="color: #666; font-size: 0.9rem">
+                Admin punya akses penuh. Kasir cuma bisa akses tab Pesanan
+                (lihat & ubah status) dan Setting Menu (cuma ubah status
+                Tersedia/Nonaktif).
+              </p>
+            </div>
+            <button
+              id="tambahStaffBtn"
+              style="
+                background: #000;
+                color: #fff;
+                border: none;
+                padding: 10px 18px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                white-space: nowrap;
+              "
+            >
+              + Tambah Staff
+            </button>
+          </div>
+
+          <div style="overflow-x: auto">
+            <table
+              style="
+                width: 100%;
+                border-collapse: collapse;
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                overflow: hidden;
+              "
+            >
+              <thead>
+                <tr
+                  style="
+                    background: #f8f9fa;
+                    border-bottom: 2px solid #eee;
+                    text-align: left;
+                  "
+                >
+                  <th style="padding: 12px 15px; color: #1a1a1a">Nama</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Username</th>
+                  <th style="padding: 12px 15px; color: #1a1a1a">Role</th>
+                  <th
+                    style="
+                      padding: 12px 15px;
+                      text-align: center;
+                      color: #1a1a1a;
+                    "
+                  >
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody">
+                <tr>
+                  <td
+                    colspan="4"
                     style="text-align: center; padding: 20px; color: #888"
                   >
                     Memuat data...

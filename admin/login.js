@@ -42,12 +42,20 @@ form?.addEventListener("submit", async (event) => {
   const password = passwordInput.value;
 
   if (username.length < 3) {
-    Swal.fire({ icon: "warning", title: "Username/email tidak valid", text: "Masukkan username atau email yang valid." });
+    Swal.fire({
+      icon: "warning",
+      title: "Username/email tidak valid",
+      text: "Masukkan username atau email yang valid.",
+    });
     return;
   }
 
   if (password.length < 6) {
-    Swal.fire({ icon: "warning", title: "Password tidak valid", text: "Password minimal 6 karakter." });
+    Swal.fire({
+      icon: "warning",
+      title: "Password tidak valid",
+      text: "Password minimal 6 karakter.",
+    });
     return;
   }
 
