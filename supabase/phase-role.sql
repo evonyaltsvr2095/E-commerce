@@ -156,3 +156,12 @@ select policyname, cmd, roles
 from pg_policies
 where tablename in ('admin_profiles', 'orders', 'products')
 order by tablename, policyname;
+
+
+insert into public.admin_profiles (id, username, display_name, role)
+values (
+  '7fc15e93-c04f-418d-b1bf-b2df3bf2b5ea',
+  'kasir1',
+  'kasirkopingalam',
+  'kasir'
+);

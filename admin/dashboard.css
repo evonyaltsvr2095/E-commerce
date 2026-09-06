@@ -31,6 +31,8 @@ body {
   background: #111;
   border-right: 1px solid var(--border);
   z-index: 20;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .brand {
