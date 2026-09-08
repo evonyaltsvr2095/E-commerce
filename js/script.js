@@ -55,14 +55,8 @@ const METODE_PEMBAYARAN = [
   },
 ];
 
-// Catatan: GOOGLE_SCRIPT_URL sudah TIDAK dipakai lagi.
-// Pesanan sekarang disimpan langsung ke Supabase (lihat kirimKeSupabase()).
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbwWoEOWybdNb3gCnSSTuyF99ZWrdg0P30sbnIcFVZvbIPh-OQO0cGS4_M5C1BaMWYVk/exec";
-
-// ======================================================
-// FUNGSI KIRIM PESAN KONTAK KE WHATSAPP
-// ======================================================
 
 function kirimKeWa() {
   const nama = document.querySelector("#nama")?.value.trim() || "";
@@ -89,10 +83,6 @@ function kirimKeWa() {
   window.location.href = whatsappUrl;
 }
 
-// ======================================================
-// NAVBAR
-// ======================================================
-
 const navbarNav = document.querySelector(".navbar-nav");
 const hamburgerMenu = document.querySelector("#hamburger-menu");
 
@@ -104,10 +94,6 @@ if (hamburgerMenu && navbarNav) {
     navbarNav.classList.toggle("active");
   });
 }
-
-// ======================================================
-// SEARCH FORM
-// ======================================================
 
 const searchForm = document.querySelector(".search-form");
 const searchBox = document.querySelector("#search-box");
@@ -126,10 +112,6 @@ if (searchButton && searchForm && searchBox) {
   });
 }
 
-// ======================================================
-// SHOPPING CART
-// ======================================================
-
 const shoppingCart = document.querySelector(".shopping-cart");
 const shoppingCartButton = document.querySelector("#shopping-cart-button");
 
@@ -142,14 +124,9 @@ if (shoppingCartButton && shoppingCart) {
   });
 }
 
-// ======================================================
-// KLIK DI LUAR NAVBAR / SEARCH / CART
-// ======================================================
-
 document.addEventListener("click", function (e) {
   const target = e.target;
 
-  // Navbar
   if (
     navbarNav &&
     hamburgerMenu &&
@@ -159,7 +136,6 @@ document.addEventListener("click", function (e) {
     navbarNav.classList.remove("active");
   }
 
-  // Search
   if (
     searchForm &&
     searchButton &&
@@ -169,7 +145,6 @@ document.addEventListener("click", function (e) {
     searchForm.classList.remove("active");
   }
 
-  // Shopping cart
   if (
     shoppingCart &&
     shoppingCartButton &&
@@ -179,10 +154,6 @@ document.addEventListener("click", function (e) {
     shoppingCart.classList.remove("active");
   }
 });
-
-// ======================================================
-// HISTORY MODAL
-// ======================================================
 
 const historyModal = document.querySelector("#history-modal");
 const historyButton = document.querySelector("#history-button");
@@ -195,61 +166,32 @@ if (historyButton && historyModal) {
   });
 }
 
-// ======================================================
-// RIWAYAT PESANAN - GOOGLE SHEETS
-// ======================================================
-
 window.orderHistory = function () {
   return {
-    // Nomor HP yang dimasukkan pelanggan
     phone: "",
-
-    // Email yang dimasukkan pelanggan
     email: "",
-
-    // Daftar pesanan
     historyItems: [],
-
-    // Status loading
     loading: false,
-
-    // Apakah pencarian sudah dilakukan
     searched: false,
-
-    // Pesan error
     errorMessage: "",
-
-    // ==================================================
-    // CARI PESANAN
-    // ==================================================
 
     async cariPesanan() {
       this.errorMessage = "";
       this.historyItems = [];
       this.searched = false;
 
-      // -----------------------------------------------
-      // AMBIL NOMOR & EMAIL
-      // -----------------------------------------------
-
       const nomor = String(this.phone || "").trim();
       const emailInput = String(this.email || "")
         .trim()
         .toLowerCase();
 
-      // -----------------------------------------------
-      // VALIDASI
-      // -----------------------------------------------
-
-      if (!nomor) {
+        if (!nomor) {
         this.errorMessage = "Silakan masukkan nomor WhatsApp Anda.";
 
         return;
       }
 
-      // Minimal 8 digit
       const nomorBersih = nomor.replace(/\D/g, "");
-
       if (nomorBersih.length < 8) {
         this.errorMessage = "Nomor WhatsApp tidak valid.";
 
@@ -259,27 +201,12 @@ window.orderHistory = function () {
       if (!emailInput) {
         this.errorMessage =
           "Silakan masukkan email yang dipakai saat checkout.";
-
         return;
       }
-
-      // -----------------------------------------------
-      // LOADING
-      // -----------------------------------------------
 
       this.loading = true;
 
       try {
-        // =============================================
-        // AMBIL RIWAYAT DARI SUPABASE
-        // =============================================
-        //
-        // Dipanggil lewat RPC (fungsi database), bukan
-        // SELECT langsung ke tabel orders. Ini supaya
-        // customer (anon) TIDAK bisa membaca sembarang
-        // pesanan, kecuali nomor HP & email yang dia
-        // masukkan cocok PERSIS dengan punya pesanan itu.
-
         const { data, error } = await supabaseClient.rpc(
           "get_customer_orders",
           {
@@ -287,18 +214,14 @@ window.orderHistory = function () {
             p_email: emailInput,
           },
         );
-
         if (error) {
           throw error;
         }
-
         const hasil = (data || []).map(function (order) {
           const rawItems = Array.isArray(order.items) ? order.items : [];
-
           const daftarItem = rawItems
             .map((it) => `${it.name} (${it.quantity}x)`)
             .join(", ");
-
           return {
             idOrder: order.id,
             tanggal: new Date(order.created_at).toLocaleString("id-ID"),
@@ -321,17 +244,12 @@ window.orderHistory = function () {
         this.historyItems = hasil;
         this.searched = true;
 
-        // -----------------------------------------------
-        // AMBIL RATING YANG SUDAH PERNAH DIISI (kalau ada)
-        // supaya bintang & komentar lama tampil terisi lagi
-        // -----------------------------------------------
         const orderIds = hasil.map((o) => o.idOrder).filter(Boolean);
         if (orderIds.length > 0) {
           const { data: reviewData, error: reviewError } = await supabaseClient
             .from("product_reviews")
             .select("order_id, product_id, rating, comment")
             .in("order_id", orderIds);
-
           if (!reviewError && reviewData) {
             reviewData.forEach((rv) => {
               const order = hasil.find((o) => o.idOrder === rv.order_id);
@@ -346,7 +264,6 @@ window.orderHistory = function () {
             });
           }
         }
-
         if (hasil.length === 0) {
           this.errorMessage =
             "Tidak ditemukan pesanan dengan nomor WhatsApp dan email tersebut.";
@@ -360,10 +277,6 @@ window.orderHistory = function () {
         this.loading = false;
       }
     },
-
-    // ==================================================
-    // RATING & ULASAN MENU
-    // ==================================================
 
     pilihBintang(item, angka) {
       item.myRating = angka;
@@ -418,12 +331,7 @@ window.orderHistory = function () {
   };
 };
 
-// ======================================================
-// TUTUP MODAL HISTORY
-// ======================================================
-
 const closeHistory = document.querySelector("#close-history");
-
 if (closeHistory && historyModal) {
   closeHistory.addEventListener("click", function (e) {
     e.preventDefault();
@@ -432,31 +340,11 @@ if (closeHistory && historyModal) {
   });
 }
 
-// ======================================================
-// MODAL ITEM DETAIL
-// ======================================================
-//
-// Detail produk sekarang ditangani oleh Alpine.js
-// melalui:
-// @click.prevent="changeItem(item)"
-//
-// Jadi tidak perlu lagi:
-// document.querySelectorAll(".item-detail-button")
-// ======================================================
-
-// ======================================================
-// KLIK DI LUAR MODAL
-// ======================================================
-
 window.addEventListener("click", function (e) {
   if (e.target === historyModal) {
     historyModal.style.display = "none";
   }
 });
-
-// ======================================================
-// SIMPAN HISTORY PESANAN
-// ======================================================
 
 function simpanHistory(cartItems, total, phone, orderId) {
   const newHistoryEntry = {
@@ -486,15 +374,7 @@ function simpanHistory(cartItems, total, phone, orderId) {
   localStorage.setItem("kopi-history", JSON.stringify(currentHistory));
 }
 
-// ======================================================
-// KIRIM DATA PESANAN KE SUPABASE
-// ======================================================
-
 async function kirimKeSupabase(dataPesanan) {
-  // Dipanggil lewat RPC (fungsi database) supaya order_items
-  // (dipakai untuk hitung HPP & kurangi stok bahan otomatis)
-  // ikut terisi dengan aman, tanpa perlu izin INSERT langsung
-  // ke tabel order_items untuk customer (anon).
   const { data: orderId, error } = await supabaseClient.rpc(
     "buat_pesanan_dengan_item",
     {
@@ -517,19 +397,11 @@ async function kirimKeSupabase(dataPesanan) {
   return { id: orderId };
 }
 
-// ======================================================
-// CHECKOUT
-// ======================================================
-
 const checkoutButton = document.querySelector("#checkout");
 
 if (checkoutButton) {
   checkoutButton.addEventListener("click", async function (e) {
     e.preventDefault();
-
-    // -----------------------------------------------
-    // AMBIL FORM CHECKOUT
-    // -----------------------------------------------
 
     const checkoutForm = document.querySelector("#checkoutForm");
 
@@ -539,20 +411,11 @@ if (checkoutButton) {
     }
 
     const namaInput = checkoutForm.querySelector("#name");
-
     const emailInput = checkoutForm.querySelector("#email");
-
     const phoneInput = checkoutForm.querySelector("#phone");
-
     const nama = namaInput?.value.trim() || "";
-
     const email = emailInput?.value.trim() || "";
-
     const phone = phoneInput?.value.trim() || "";
-
-    // -----------------------------------------------
-    // AMBIL DATA CART
-    // -----------------------------------------------
 
     if (typeof Alpine === "undefined" || !Alpine.store("cart")) {
       Swal.fire({
@@ -560,19 +423,12 @@ if (checkoutButton) {
         title: "Cart Error",
         text: "Data keranjang belum siap. Silakan refresh halaman.",
       });
-
       return;
     }
 
     const cart = Alpine.store("cart");
-
     const cartItems = cart.items;
     const total = cart.total;
-
-    // -----------------------------------------------
-    // VALIDASI
-    // -----------------------------------------------
-
     if (!cartItems || cartItems.length === 0) {
       Swal.fire({
         icon: "warning",
@@ -593,16 +449,9 @@ if (checkoutButton) {
       return;
     }
 
-    // TUTUP SHOPPING CART SEBELUM QR MUNCUL
-    // -----------------------------------------------
-
     if (shoppingCart) {
       shoppingCart.classList.remove("active");
     }
-
-    // -----------------------------------------------
-    // PILIH METODE PEMBAYARAN
-    // -----------------------------------------------
 
     function htmlDetailMetode(m) {
       if (m.tipe === "tunai") {
@@ -646,40 +495,30 @@ if (checkoutButton) {
 
     const result = await Swal.fire({
       title: "Pilih Metode Pembayaran",
-
       html: `
         <div style="font-size: 1rem; margin-bottom: 6px;">
           Total yang harus dibayar:
         </div>
-
         <div style="font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">
           ${rupiah(total)}
         </div>
-
         <div id="metode-list" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:14px;">
           ${tombolMetodeHtml}
         </div>
-
         <div
           id="metode-detail"
           style="display:none; min-height:60px; padding:12px; border-radius:8px; background:#f7f4f0; margin-bottom:12px; font-size: 0.9rem;"
         ></div>
-
         <div style="font-size: 0.8rem; color: #888;">
           * Setelah konfirmasi, Anda akan diarahkan ke WhatsApp *
         </div>
       `,
 
       showCancelButton: true,
-
       confirmButtonText: "Konfirmasi Pembayaran",
-
       cancelButtonText: "Batal",
-
       confirmButtonColor: "#b6895b",
-
       cancelButtonColor: "#666",
-
       allowOutsideClick: false,
 
       didOpen: () => {
@@ -690,9 +529,7 @@ if (checkoutButton) {
             document
               .querySelectorAll(".metode-bayar-btn")
               .forEach((b) => b.classList.remove("active"));
-
             btn.classList.add("active");
-
             metodeTerpilih = btn.getAttribute("data-metode");
 
             const m = METODE_PEMBAYARAN.find((x) => x.id === metodeTerpilih);
@@ -710,22 +547,15 @@ if (checkoutButton) {
         return metodeTerpilih;
       },
     });
-
-    // JIKA USER MEMBATALKAN
-
     if (!result.isConfirmed) {
       return;
     }
-
-    // SUSUN DAFTAR PESANAN
 
     const daftarPesanan = cartItems
       .map(function (item) {
         return `${item.name} (${item.quantity}x)`;
       })
       .join(", ");
-
-    // DATA UNTUK SUPABASE
 
     const itemsUntukDb = cartItems.map(function (item) {
       return {
@@ -739,31 +569,18 @@ if (checkoutButton) {
 
     const dataKeSpreadsheet = {
       nama: nama,
-
       email: email,
-
       phone: phone,
-
       pesanan: daftarPesanan,
-
       items: itemsUntukDb,
-
       total: total,
-
       paymentMethod: result.value,
     };
 
-    // -----------------------------------------------
-    // TAMPILKAN LOADING
-    // -----------------------------------------------
-
     Swal.fire({
       title: "Menyimpan Pesanan...",
-
       text: "Mohon tunggu sebentar.",
-
       allowOutsideClick: false,
-
       allowEscapeKey: false,
 
       didOpen: function () {
@@ -771,25 +588,14 @@ if (checkoutButton) {
       },
     });
 
-    // -----------------------------------------------
-    // KIRIM KE GOOGLE SHEETS
-    // -----------------------------------------------
-
     try {
       const hasil = await kirimKeSupabase(dataKeSpreadsheet);
 
       console.log("Hasil simpan pesanan:", hasil);
 
-      // ---------------------------------------------
-      // SIMPAN HISTORY LOCAL
-      // ---------------------------------------------
-
       simpanHistory(cartItems, total, phone, hasil && hasil.id);
 
-      // ---------------------------------------------
       // SUSUN PESAN WHATSAPP
-      // ---------------------------------------------
-
       let pesan = "Halo Admin Kopi Ngalam!\n\n";
 
       const metodeDipilih = METODE_PEMBAYARAN.find(
@@ -812,29 +618,18 @@ if (checkoutButton) {
         }
         pesan += "\n";
       });
-
       pesan += `\n*Total: ${rupiah(total)}*`;
-
       pesan += "\n\n---\n*Data Pelanggan*";
-
       pesan += `\nNama: ${nama}`;
-
       pesan += `\nEmail: ${email || "-"}`;
-
       pesan += `\nNo HP: ${phone}`;
 
-      // ---------------------------------------------
       // ID ORDER
-      // ---------------------------------------------
-
       if (hasil && hasil.id) {
         pesan += `\nID Order: ${hasil.id}`;
       }
 
-      // ---------------------------------------------
       // URL WHATSAPP
-      // ---------------------------------------------
-
       const whatsappUrl =
         "https://wa.me/" +
         WHATSAPP_ADMIN +
