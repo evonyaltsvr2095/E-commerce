@@ -137,7 +137,7 @@ h1 {
 
 .welcome {
   margin-top: 30px;
-  padding: 30px;
+  padding: 25px 30px;
   border: 1px solid rgba(182, 137, 91, 0.25);
   border-radius: 18px;
   background: linear-gradient(
@@ -145,11 +145,35 @@ h1 {
     rgba(182, 137, 91, 0.16),
     rgba(255, 255, 255, 0.025)
   );
+
+  display: flex;
+  align-items: center;
+  gap: 30px;
 }
+
+.welcome-logo {
+  flex: 0 0 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome-logo img {
+  width: 180px;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+
+.welcome-content {
+  flex: 1;
+}
+
 .welcome h2 {
   margin: 5px 0 8px;
   font-size: 1.5rem;
 }
+
 .welcome p:last-child {
   color: var(--muted);
   line-height: 1.7;
